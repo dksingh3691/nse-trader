@@ -1,734 +1,1051 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#030d1c" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="NSE Trader" />
-  <meta name="description" content="NSE India Paper Trading Strategy Tester" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+  <meta name="theme-color" content="#030d1c"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="NSE Trader"/>
   <title>NSE Paper Trader</title>
-  <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
-  <!-- React + Babel from CDN -->
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="apple-touch-icon" href="icon-192.png"/>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body, #root { height: 100%; width: 100%; overflow: hidden; }
-    body { background: #020b18; color: #e2e8f0; font-family: 'Courier New', Consolas, monospace; }
-    ::-webkit-scrollbar { width: 4px; height: 4px; }
-    ::-webkit-scrollbar-track { background: #020b18; }
-    ::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 2px; }
-    input, button { font-family: inherit; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-    @keyframes slideIn { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
-    @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .notif { animation: slideIn 0.3s ease; }
-    .fadeIn { animation: fadeIn 0.2s ease; }
-    .navbtn:hover { background: #0c1f35 !important; color: #e2e8f0 !important; }
-    .groupbtn:hover { border-color: #38bdf850 !important; }
-    .addbtn:hover { background: #0c1f35 !important; }
-    .gcard { transition: all 0.15s !important; }
-    .gcard:hover { border-color: #38bdf840 !important; transform: translateY(-2px) !important; box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important; }
-    .sug:hover { background: #0c1f35 !important; cursor: pointer; }
-    .strow:hover td { background: rgba(12,31,53,0.5) !important; }
-    input::placeholder { color: #334155; }
-    input:focus { outline: none; border-color: #38bdf860 !important; box-shadow: 0 0 0 2px #38bdf815; }
-    button:active { opacity: 0.8; }
-    .delBtn:hover { color: #ef4444 !important; }
-    /* Mobile bottom safe area */
-    @supports (padding-bottom: env(safe-area-inset-bottom)) {
-      .main-content { padding-bottom: calc(16px + env(safe-area-inset-bottom)) !important; }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body,#root{height:100%;width:100%;overflow:hidden}
+    body{background:#020b18;color:#e2e8f0;font-family:'Courier New',Consolas,monospace}
+    ::-webkit-scrollbar{width:4px;height:4px}
+    ::-webkit-scrollbar-track{background:#020b18}
+    ::-webkit-scrollbar-thumb{background:#1e3a5f;border-radius:2px}
+    input,button{font-family:inherit}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0.4}}
+    @keyframes slideIn{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .notif{animation:slideIn 0.3s ease}
+    .fadeIn{animation:fadeIn 0.2s ease}
+    .navbtn:hover{background:#0c1f35!important;color:#e2e8f0!important}
+    .groupbtn:hover{border-color:#38bdf850!important}
+    .addbtn:hover{background:#0c1f35!important}
+    .gcard{transition:all 0.15s!important}
+    .gcard:hover{border-color:#38bdf840!important;transform:translateY(-2px)!important}
+    .sug:hover{background:#0c1f35!important;cursor:pointer}
+    .strow:hover td{background:rgba(12,31,53,0.5)!important}
+    input::placeholder{color:#334155}
+    input:focus{outline:none;border-color:#38bdf860!important;box-shadow:0 0 0 2px #38bdf815}
+    button:active{opacity:0.8}
+    .delBtn:hover{color:#ef4444!important}
+    @supports(padding-bottom:env(safe-area-inset-bottom)){
+      .main-content{padding-bottom:calc(16px + env(safe-area-inset-bottom))!important}
     }
-    /* Mobile responsive */
-    @media (max-width: 640px) {
-      .sidebar { width: 0 !important; overflow: hidden !important; padding: 0 !important; }
-      .sidebar.open { width: 200px !important; overflow: auto !important; padding: 14px 10px !important; position: fixed !important; left: 0 !important; top: 0 !important; bottom: 0 !important; z-index: 50 !important; background: #030d1c !important; }
-      .layout { flex-direction: column !important; }
-      .market-strip { display: none !important; }
+    @media(max-width:640px){
+      .sidebar{width:0!important;overflow:hidden!important;padding:0!important}
+      .sidebar.open{width:210px!important;overflow:auto!important;padding:14px 10px!important;
+        position:fixed!important;left:0!important;top:0!important;bottom:0!important;
+        z-index:50!important;background:#030d1c!important}
+      .mktstrip{display:none!important}
     }
   </style>
 </head>
 <body>
-  <div id="root"></div>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const {useState,useEffect,useRef,useCallback} = React;
 
-  <script type="text/babel" data-presets="react">
-    const { useState, useEffect, useRef, useCallback } = React;
+// ═══════════════════════════════════════════════════════════════════
+// NIFTY 300 STOCK DATABASE
+// ═══════════════════════════════════════════════════════════════════
+const NSE_STOCKS = [
+  {s:"RELIANCE",  n:"Reliance Industries",       sec:"Energy"},
+  {s:"TCS",       n:"Tata Consultancy Services", sec:"IT"},
+  {s:"HDFCBANK",  n:"HDFC Bank",                 sec:"Banking"},
+  {s:"BHARTIARTL",n:"Bharti Airtel",             sec:"Telecom"},
+  {s:"ICICIBANK", n:"ICICI Bank",                sec:"Banking"},
+  {s:"INFY",      n:"Infosys",                   sec:"IT"},
+  {s:"SBIN",      n:"State Bank of India",       sec:"Banking"},
+  {s:"HINDUNILVR",n:"Hindustan Unilever",        sec:"FMCG"},
+  {s:"ITC",       n:"ITC Ltd",                   sec:"FMCG"},
+  {s:"KOTAKBANK", n:"Kotak Mahindra Bank",       sec:"Banking"},
+  {s:"LT",        n:"Larsen & Toubro",           sec:"Infra"},
+  {s:"BAJFINANCE",n:"Bajaj Finance",             sec:"Finance"},
+  {s:"HCLTECH",   n:"HCL Technologies",          sec:"IT"},
+  {s:"AXISBANK",  n:"Axis Bank",                 sec:"Banking"},
+  {s:"ASIANPAINT",n:"Asian Paints",              sec:"Paints"},
+  {s:"MARUTI",    n:"Maruti Suzuki",             sec:"Auto"},
+  {s:"SUNPHARMA", n:"Sun Pharmaceutical",        sec:"Pharma"},
+  {s:"TITAN",     n:"Titan Company",             sec:"Gems"},
+  {s:"WIPRO",     n:"Wipro Ltd",                 sec:"IT"},
+  {s:"ULTRACEMCO",n:"UltraTech Cement",          sec:"Cement"},
+  {s:"NTPC",      n:"NTPC Ltd",                  sec:"Power"},
+  {s:"POWERGRID", n:"Power Grid Corp",           sec:"Power"},
+  {s:"TATAMOTORS",n:"Tata Motors",               sec:"Auto"},
+  {s:"M&M",       n:"Mahindra & Mahindra",       sec:"Auto"},
+  {s:"NESTLEIND", n:"Nestle India",              sec:"FMCG"},
+  {s:"TATASTEEL", n:"Tata Steel",                sec:"Metals"},
+  {s:"ADANIENT",  n:"Adani Enterprises",         sec:"Diversified"},
+  {s:"ADANIPORTS",n:"Adani Ports & SEZ",         sec:"Logistics"},
+  {s:"ONGC",      n:"Oil & Natural Gas Corp",    sec:"Energy"},
+  {s:"JSWSTEEL",  n:"JSW Steel",                 sec:"Metals"},
+  {s:"GRASIM",    n:"Grasim Industries",         sec:"Cement"},
+  {s:"COALINDIA", n:"Coal India",                sec:"Mining"},
+  {s:"HINDALCO",  n:"Hindalco Industries",       sec:"Metals"},
+  {s:"DRREDDY",   n:"Dr. Reddy's Laboratories",  sec:"Pharma"},
+  {s:"CIPLA",     n:"Cipla Ltd",                 sec:"Pharma"},
+  {s:"INDUSINDBK",n:"IndusInd Bank",             sec:"Banking"},
+  {s:"EICHERMOT", n:"Eicher Motors",             sec:"Auto"},
+  {s:"BPCL",      n:"Bharat Petroleum",          sec:"Energy"},
+  {s:"HEROMOTOCO",n:"Hero MotoCorp",             sec:"Auto"},
+  {s:"DIVISLAB",  n:"Divi's Laboratories",       sec:"Pharma"},
+  {s:"BAJAJ-AUTO",n:"Bajaj Auto",                sec:"Auto"},
+  {s:"TECHM",     n:"Tech Mahindra",             sec:"IT"},
+  {s:"TATACONSUM",n:"Tata Consumer Products",    sec:"FMCG"},
+  {s:"APOLLOHOSP",n:"Apollo Hospitals",          sec:"Healthcare"},
+  {s:"SHREECEM",  n:"Shree Cement",              sec:"Cement"},
+  {s:"BAJAJFINSV",n:"Bajaj Finserv",             sec:"Finance"},
+  {s:"BRITANNIA", n:"Britannia Industries",      sec:"FMCG"},
+  {s:"SBILIFE",   n:"SBI Life Insurance",        sec:"Insurance"},
+  {s:"HDFCLIFE",  n:"HDFC Life Insurance",       sec:"Insurance"},
+  {s:"SIEMENS",   n:"Siemens India",             sec:"Engineering"},
+  {s:"PIDILITIND",n:"Pidilite Industries",       sec:"Chemicals"},
+  {s:"DABUR",     n:"Dabur India",               sec:"FMCG"},
+  {s:"AMBUJACEM", n:"Ambuja Cements",            sec:"Cement"},
+  {s:"HAVELLS",   n:"Havells India",             sec:"Electricals"},
+  {s:"DMART",     n:"Avenue Supermarts (DMart)", sec:"Retail"},
+  {s:"TRENT",     n:"Trent Ltd",                 sec:"Retail"},
+  {s:"MUTHOOTFIN",n:"Muthoot Finance",           sec:"Finance"},
+  {s:"VEDL",      n:"Vedanta Ltd",               sec:"Metals"},
+  {s:"BANKBARODA",n:"Bank of Baroda",            sec:"Banking"},
+  {s:"PNB",       n:"Punjab National Bank",      sec:"Banking"},
+  {s:"SAIL",      n:"Steel Authority of India",  sec:"Metals"},
+  {s:"ZOMATO",    n:"Zomato Ltd",                sec:"Internet"},
+  {s:"NYKAA",     n:"FSN E-Commerce (Nykaa)",    sec:"Retail"},
+  {s:"PAYTM",     n:"One 97 Comm (Paytm)",       sec:"Fintech"},
+  {s:"NAUKRI",    n:"Info Edge (Naukri)",         sec:"Internet"},
+  {s:"IRCTC",     n:"Indian Railway Catering",   sec:"Services"},
+  {s:"GODREJCP",  n:"Godrej Consumer Products",  sec:"FMCG"},
+  {s:"BERGEPAINT",n:"Berger Paints India",       sec:"Paints"},
+  {s:"COLPAL",    n:"Colgate-Palmolive India",   sec:"FMCG"},
+  {s:"MARICO",    n:"Marico Ltd",                sec:"FMCG"},
+  {s:"TATAPOWER", n:"Tata Power Company",        sec:"Power"},
+  {s:"ADANIGREEN",n:"Adani Green Energy",        sec:"Power"},
+  {s:"ADANIPOWER",n:"Adani Power",               sec:"Power"},
+  {s:"CANBK",     n:"Canara Bank",               sec:"Banking"},
+  {s:"UNIONBANK", n:"Union Bank of India",       sec:"Banking"},
+  {s:"IDFCFIRSTB",n:"IDFC First Bank",           sec:"Banking"},
+  {s:"FEDERALBNK",n:"Federal Bank",              sec:"Banking"},
+  {s:"BANDHANBNK",n:"Bandhan Bank",              sec:"Banking"},
+  {s:"YESBANK",   n:"Yes Bank",                  sec:"Banking"},
+  {s:"AUBANK",    n:"AU Small Finance Bank",     sec:"Banking"},
+  {s:"HAL",       n:"Hindustan Aeronautics",     sec:"Defence"},
+  {s:"BEL",       n:"Bharat Electronics",        sec:"Defence"},
+  {s:"IOC",       n:"Indian Oil Corporation",    sec:"Energy"},
+  {s:"GAIL",      n:"GAIL India",                sec:"Energy"},
+  {s:"HINDPETRO", n:"Hindustan Petroleum",       sec:"Energy"},
+  {s:"CONCOR",    n:"Container Corp of India",   sec:"Logistics"},
+  {s:"LICI",      n:"Life Insurance Corp (LIC)", sec:"Insurance"},
+  {s:"ICICIGI",   n:"ICICI Lombard General Ins", sec:"Insurance"},
+  {s:"ICICIPRULI",n:"ICICI Prudential Life Ins", sec:"Insurance"},
+  {s:"HDFCAMC",   n:"HDFC AMC",                  sec:"Finance"},
+  {s:"MFSL",      n:"Max Financial Services",    sec:"Insurance"},
+  {s:"RECLTD",    n:"REC Ltd",                   sec:"Finance"},
+  {s:"NHPC",      n:"NHPC Ltd",                  sec:"Power"},
+  {s:"SJVN",      n:"SJVN Ltd",                  sec:"Power"},
+  {s:"ACC",       n:"ACC Ltd",                   sec:"Cement"},
+  {s:"AIAENG",    n:"AIA Engineering",           sec:"Engineering"},
+  {s:"ALKEM",     n:"Alkem Laboratories",        sec:"Pharma"},
+  {s:"APOLLOTYRE",n:"Apollo Tyres",              sec:"Auto Ancillary"},
+  {s:"ASHOKLEY",  n:"Ashok Leyland",             sec:"Auto"},
+  {s:"ASTRAL",    n:"Astral Ltd",                sec:"Plumbing"},
+  {s:"AUROPHARMA",n:"Aurobindo Pharma",          sec:"Pharma"},
+  {s:"BALKRISIND",n:"Balkrishna Industries",     sec:"Auto Ancillary"},
+  {s:"BATAINDIA", n:"Bata India",                sec:"Retail"},
+  {s:"BHARATFORG",n:"Bharat Forge",              sec:"Auto Ancillary"},
+  {s:"BHEL",      n:"Bharat Heavy Electricals",  sec:"Engineering"},
+  {s:"BIOCON",    n:"Biocon Ltd",                sec:"Pharma"},
+  {s:"CEATLTD",   n:"CEAT Ltd",                  sec:"Auto Ancillary"},
+  {s:"CHOLAFIN",  n:"Cholamandalam Finance",     sec:"Finance"},
+  {s:"COFORGE",   n:"Coforge Ltd",               sec:"IT"},
+  {s:"CROMPTON",  n:"Crompton Greaves Consumer", sec:"Consumer Durables"},
+  {s:"CUMMINSIND",n:"Cummins India",             sec:"Engineering"},
+  {s:"DEEPAKNTR", n:"Deepak Nitrite",            sec:"Chemicals"},
+  {s:"DIXON",     n:"Dixon Technologies",        sec:"Electronics"},
+  {s:"ESCORTS",   n:"Escorts Kubota",            sec:"Auto"},
+  {s:"EXIDEIND",  n:"Exide Industries",          sec:"Auto Ancillary"},
+  {s:"FORTIS",    n:"Fortis Healthcare",         sec:"Healthcare"},
+  {s:"GMRINFRA",  n:"GMR Airports Infra",        sec:"Infra"},
+  {s:"GODREJPROP",n:"Godrej Properties",         sec:"Real Estate"},
+  {s:"GRANULES",  n:"Granules India",            sec:"Pharma"},
+  {s:"GUJGASLTD", n:"Gujarat Gas",               sec:"Energy"},
+  {s:"IGL",       n:"Indraprastha Gas",          sec:"Energy"},
+  {s:"INDIANB",   n:"Indian Bank",               sec:"Banking"},
+  {s:"INDIAMART", n:"Indiamart Intermesh",       sec:"Internet"},
+  {s:"IPCALAB",   n:"IPCA Laboratories",         sec:"Pharma"},
+  {s:"IRCON",     n:"IRCON International",       sec:"Infra"},
+  {s:"JKCEMENT",  n:"JK Cement",                 sec:"Cement"},
+  {s:"JUBLFOOD",  n:"Jubilant Foodworks",        sec:"Restaurants"},
+  {s:"KAJARIACER",n:"Kajaria Ceramics",          sec:"Building Materials"},
+  {s:"KPIT",      n:"KPIT Technologies",         sec:"IT"},
+  {s:"LAURUSLABS",n:"Laurus Labs",               sec:"Pharma"},
+  {s:"LICHSGFIN", n:"LIC Housing Finance",       sec:"Finance"},
+  {s:"LUPIN",     n:"Lupin Ltd",                 sec:"Pharma"},
+  {s:"MANAPPURAM",n:"Manappuram Finance",        sec:"Finance"},
+  {s:"MAXHEALTH", n:"Max Healthcare Institute",  sec:"Healthcare"},
+  {s:"MCX",       n:"Multi Commodity Exchange",  sec:"Finance"},
+  {s:"MGL",       n:"Mahanagar Gas",             sec:"Energy"},
+  {s:"MOTHERSON", n:"Samvardhana Motherson",     sec:"Auto Ancillary"},
+  {s:"MPHASIS",   n:"Mphasis Ltd",               sec:"IT"},
+  {s:"MRF",       n:"MRF Ltd",                   sec:"Auto Ancillary"},
+  {s:"NATCOPHARM",n:"Natco Pharma",              sec:"Pharma"},
+  {s:"NAVINFLUOR",n:"Navin Fluorine",            sec:"Chemicals"},
+  {s:"NMDC",      n:"NMDC Ltd",                  sec:"Mining"},
+  {s:"OBEROIRLTY",n:"Oberoi Realty",             sec:"Real Estate"},
+  {s:"OFSS",      n:"Oracle Financial Services", sec:"IT"},
+  {s:"OIL",       n:"Oil India",                 sec:"Energy"},
+  {s:"PAGEIND",   n:"Page Industries",           sec:"Textiles"},
+  {s:"PERSISTENT",n:"Persistent Systems",        sec:"IT"},
+  {s:"PETRONET",  n:"Petronet LNG",              sec:"Energy"},
+  {s:"PIIND",     n:"PI Industries",             sec:"Agrochemicals"},
+  {s:"POLYCAB",   n:"Polycab India",             sec:"Electricals"},
+  {s:"PRESTIGE",  n:"Prestige Estates",          sec:"Real Estate"},
+  {s:"SRF",       n:"SRF Ltd",                   sec:"Chemicals"},
+  {s:"SUPREMEIND",n:"Supreme Industries",        sec:"Plastics"},
+  {s:"SYNGENE",   n:"Syngene International",     sec:"Pharma"},
+  {s:"TATACHEM",  n:"Tata Chemicals",            sec:"Chemicals"},
+  {s:"TATACOMM",  n:"Tata Communications",       sec:"Telecom"},
+  {s:"TATAELXSI", n:"Tata Elxsi",                sec:"IT"},
+  {s:"THERMAX",   n:"Thermax Ltd",               sec:"Engineering"},
+  {s:"TORNTPHARM",n:"Torrent Pharmaceuticals",   sec:"Pharma"},
+  {s:"TORNTPOWER",n:"Torrent Power",             sec:"Power"},
+  {s:"TVSMOTOR",  n:"TVS Motor Company",         sec:"Auto"},
+  {s:"UPL",       n:"UPL Ltd",                   sec:"Agrochemicals"},
+  {s:"VBL",       n:"Varun Beverages",           sec:"Beverages"},
+  {s:"VINATIORGA",n:"Vinati Organics",           sec:"Chemicals"},
+  {s:"VOLTAS",    n:"Voltas Ltd",                sec:"Consumer Durables"},
+  {s:"ZYDUSLIFE", n:"Zydus Lifesciences",        sec:"Pharma"},
+  {s:"AARTIIND",  n:"Aarti Industries",          sec:"Chemicals"},
+  {s:"ABBOTINDIA",n:"Abbott India",              sec:"Pharma"},
+  {s:"AFFLE",     n:"Affle India",               sec:"IT"},
+  {s:"AJANTPHARM",n:"Ajanta Pharma",             sec:"Pharma"},
+  {s:"APTUS",     n:"Aptus Value Housing Fin",   sec:"Finance"},
+  {s:"BALAMINES", n:"Balaji Amines",             sec:"Chemicals"},
+  {s:"BIKAJI",    n:"Bikaji Foods International",sec:"FMCG"},
+  {s:"BRIGADE",   n:"Brigade Enterprises",       sec:"Real Estate"},
+  {s:"BSE",       n:"BSE Ltd",                   sec:"Finance"},
+  {s:"CAMPUS",    n:"Campus Activewear",         sec:"Retail"},
+  {s:"CANFINHOME",n:"Can Fin Homes",             sec:"Finance"},
+  {s:"CGPOWER",   n:"CG Power & Industrial",     sec:"Engineering"},
+  {s:"CLEAN",     n:"Clean Science & Tech",      sec:"Chemicals"},
+  {s:"CRAFTSMAN", n:"Craftsman Automation",      sec:"Engineering"},
+  {s:"DATAPATTNS",n:"Data Patterns India",       sec:"Defence"},
+  {s:"DELHIVERY", n:"Delhivery Ltd",             sec:"Logistics"},
+  {s:"DEVYANI",   n:"Devyani International",     sec:"Restaurants"},
+  {s:"DHANUKA",   n:"Dhanuka Agritech",          sec:"Agrochemicals"},
+  {s:"EASEMYTRIP",n:"Easy Trip Planners",        sec:"Travel"},
+  {s:"ERIS",      n:"Eris Lifesciences",         sec:"Pharma"},
+  {s:"FINEORG",   n:"Fine Organic Industries",   sec:"Chemicals"},
+  {s:"GICRE",     n:"GIC Re",                    sec:"Insurance"},
+  {s:"GLENMARK",  n:"Glenmark Pharma",           sec:"Pharma"},
+  {s:"GLOBALHEALTH",n:"Global Health (Medanta)", sec:"Healthcare"},
+  {s:"GPPL",      n:"Gujarat Pipavav Port",      sec:"Logistics"},
+  {s:"GRINDWELL", n:"Grindwell Norton",          sec:"Engineering"},
+  {s:"HFCL",      n:"HFCL Ltd",                  sec:"Telecom"},
+  {s:"HOMEFIRST", n:"Home First Finance",        sec:"Finance"},
+  {s:"HUDCO",     n:"Housing & Urban Dev Corp",  sec:"Finance"},
+  {s:"IDBI",      n:"IDBI Bank",                 sec:"Banking"},
+  {s:"IIFL",      n:"IIFL Finance",              sec:"Finance"},
+  {s:"INDIGOPNTS",n:"Indigo Paints",             sec:"Paints"},
+  {s:"INTELLECT", n:"Intellect Design Arena",    sec:"IT"},
+  {s:"IOB",       n:"Indian Overseas Bank",      sec:"Banking"},
+  {s:"JBCHEPHARM",n:"JB Chemicals & Pharma",     sec:"Pharma"},
+  {s:"JINDALSTEL",n:"Jindal Steel & Power",      sec:"Metals"},
+  {s:"JKPAPER",   n:"JK Paper",                  sec:"Paper"},
+  {s:"JMFINANCIL",n:"JM Financial",              sec:"Finance"},
+  {s:"JSL",       n:"Jindal Stainless",          sec:"Metals"},
+  {s:"JSWENERGY", n:"JSW Energy",                sec:"Power"},
+  {s:"KALYANKJIL",n:"Kalyan Jewellers",          sec:"Gems"},
+  {s:"KIOCL",     n:"KIOCL Ltd",                 sec:"Mining"},
+  {s:"KPRMILL",   n:"K.P.R. Mill",               sec:"Textiles"},
+  {s:"LALPATHLAB",n:"Dr Lal PathLabs",           sec:"Healthcare"},
+  {s:"LATENTVIEW",n:"LatentView Analytics",      sec:"IT"},
+  {s:"LEMONTREE", n:"Lemon Tree Hotels",         sec:"Hotels"},
+  {s:"MAPMYINDIA",n:"CE Info Systems (MapMyIndia)",sec:"IT"},
+  {s:"MEDPLUS",   n:"Medplus Health Services",   sec:"Retail"},
+  {s:"METROBRAND",n:"Metro Brands",              sec:"Retail"},
+  {s:"MIDHANI",   n:"Mishra Dhatu Nigam",        sec:"Defence"},
+  {s:"NIACL",     n:"New India Assurance",       sec:"Insurance"},
+  {s:"NLCINDIA",  n:"NLC India",                 sec:"Power"},
+  {s:"NOCIL",     n:"NOCIL Ltd",                 sec:"Chemicals"},
+  {s:"OLECTRA",   n:"Olectra Greentech",         sec:"Auto"},
+  {s:"PNBHOUSING",n:"PNB Housing Finance",       sec:"Finance"},
+  {s:"POLICYBZR", n:"PB Fintech (Policybazaar)", sec:"Fintech"},
+  {s:"RAILTEL",   n:"RailTel Corporation",       sec:"Telecom"},
+  {s:"RAINBOW",   n:"Rainbow Children Medicare", sec:"Healthcare"},
+  {s:"RATNAMANI", n:"Ratnamani Metals & Tubes",  sec:"Metals"},
+  {s:"ROSSARI",   n:"Rossari Biotech",           sec:"Chemicals"},
+  {s:"SCHAEFFLER",n:"Schaeffler India",          sec:"Auto Ancillary"},
+  {s:"SHYAMMETL", n:"Shyam Metalics & Energy",   sec:"Metals"},
+  {s:"SOBHA",     n:"Sobha Ltd",                 sec:"Real Estate"},
+  {s:"SOLARINDS", n:"Solar Industries India",    sec:"Defence"},
+  {s:"SONACOMS",  n:"Sona BLW Precision",        sec:"Auto Ancillary"},
+  {s:"SUDARSCHEM",n:"Sudarshan Chemical Ind",    sec:"Chemicals"},
+  {s:"SUVEN",     n:"Suven Pharmaceuticals",     sec:"Pharma"},
+  {s:"SYMPHONY",  n:"Symphony Ltd",              sec:"Consumer Durables"},
+  {s:"TANLA",     n:"Tanla Platforms",           sec:"IT"},
+  {s:"TEAMLEASE", n:"TeamLease Services",        sec:"Services"},
+  {s:"THYROCARE", n:"Thyrocare Technologies",    sec:"Healthcare"},
+  {s:"TIINDIA",   n:"Tube Investments of India", sec:"Engineering"},
+  {s:"TRITURBINE",n:"Triveni Turbine",           sec:"Engineering"},
+  {s:"UCOBANK",   n:"UCO Bank",                  sec:"Banking"},
+  {s:"UJJIVANSFB",n:"Ujjivan Small Finance Bank",sec:"Banking"},
+  {s:"UTIAMC",    n:"UTI Asset Management",      sec:"Finance"},
+  {s:"VGUARD",    n:"V-Guard Industries",        sec:"Consumer Durables"},
+  {s:"VIPIND",    n:"VIP Industries",            sec:"Retail"},
+  {s:"WELCORP",   n:"Welspun Corp",              sec:"Metals"},
+  {s:"WELSPUNIND",n:"Welspun India",             sec:"Textiles"},
+  {s:"WESTLIFE",  n:"Westlife Foodworld",        sec:"Restaurants"},
+  {s:"WOCKPHARMA",n:"Wockhardt Ltd",             sec:"Pharma"},
+  {s:"ZEEL",      n:"Zee Entertainment",         sec:"Media"},
+  {s:"NIFTY50",   n:"Nifty 50 Index",            sec:"Index"},
+  {s:"BANKNIFTY", n:"Nifty Bank Index",          sec:"Index"},
+];
 
-    // ── NSE Stock Universe ──────────────────────────────────────────────────────
-    const NSE_STOCKS = [
-      { symbol:"RELIANCE",  yf:"RELIANCE.NS",  name:"Reliance Industries",       sector:"Energy"     },
-      { symbol:"TCS",       yf:"TCS.NS",        name:"Tata Consultancy Services", sector:"IT"         },
-      { symbol:"INFY",      yf:"INFY.NS",       name:"Infosys Ltd",               sector:"IT"         },
-      { symbol:"HDFCBANK",  yf:"HDFCBANK.NS",   name:"HDFC Bank Ltd",             sector:"Banking"    },
-      { symbol:"ICICIBANK", yf:"ICICIBANK.NS",  name:"ICICI Bank Ltd",            sector:"Banking"    },
-      { symbol:"HINDUNILVR",yf:"HINDUNILVR.NS", name:"Hindustan Unilever",        sector:"FMCG"       },
-      { symbol:"SBIN",      yf:"SBIN.NS",       name:"State Bank of India",       sector:"Banking"    },
-      { symbol:"BAJFINANCE",yf:"BAJFINANCE.NS", name:"Bajaj Finance Ltd",         sector:"Finance"    },
-      { symbol:"BHARTIARTL",yf:"BHARTIARTL.NS", name:"Bharti Airtel Ltd",         sector:"Telecom"    },
-      { symbol:"KOTAKBANK", yf:"KOTAKBANK.NS",  name:"Kotak Mahindra Bank",       sector:"Banking"    },
-      { symbol:"LT",        yf:"LT.NS",         name:"Larsen & Toubro Ltd",       sector:"Infra"      },
-      { symbol:"ASIANPAINT",yf:"ASIANPAINT.NS", name:"Asian Paints Ltd",          sector:"Paints"     },
-      { symbol:"AXISBANK",  yf:"AXISBANK.NS",   name:"Axis Bank Ltd",             sector:"Banking"    },
-      { symbol:"MARUTI",    yf:"MARUTI.NS",     name:"Maruti Suzuki India",       sector:"Auto"       },
-      { symbol:"TITAN",     yf:"TITAN.NS",      name:"Titan Company Ltd",         sector:"Gems"       },
-      { symbol:"SUNPHARMA", yf:"SUNPHARMA.NS",  name:"Sun Pharmaceutical",        sector:"Pharma"     },
-      { symbol:"WIPRO",     yf:"WIPRO.NS",      name:"Wipro Ltd",                 sector:"IT"         },
-      { symbol:"HCLTECH",   yf:"HCLTECH.NS",    name:"HCL Technologies",          sector:"IT"         },
-      { symbol:"ONGC",      yf:"ONGC.NS",       name:"Oil & Natural Gas Corp",    sector:"Energy"     },
-      { symbol:"NTPC",      yf:"NTPC.NS",       name:"NTPC Ltd",                  sector:"Power"      },
-      { symbol:"POWERGRID", yf:"POWERGRID.NS",  name:"Power Grid Corp",           sector:"Power"      },
-      { symbol:"NESTLEIND", yf:"NESTLEIND.NS",  name:"Nestle India Ltd",          sector:"FMCG"       },
-      { symbol:"DRREDDY",   yf:"DRREDDY.NS",    name:"Dr. Reddy's Labs",          sector:"Pharma"     },
-      { symbol:"INDUSINDBK",yf:"INDUSINDBK.NS", name:"IndusInd Bank",             sector:"Banking"    },
-      { symbol:"GRASIM",    yf:"GRASIM.NS",     name:"Grasim Industries",         sector:"Cement"     },
-      { symbol:"TATAMOTORS",yf:"TATAMOTORS.NS", name:"Tata Motors Ltd",           sector:"Auto"       },
-      { symbol:"TATASTEEL", yf:"TATASTEEL.NS",  name:"Tata Steel Ltd",            sector:"Metals"     },
-      { symbol:"ADANIENT",  yf:"ADANIENT.NS",   name:"Adani Enterprises",         sector:"Diversified"},
-      { symbol:"ADANIPORTS",yf:"ADANIPORTS.NS", name:"Adani Ports & SEZ",         sector:"Logistics"  },
-      { symbol:"CIPLA",     yf:"CIPLA.NS",      name:"Cipla Ltd",                 sector:"Pharma"     },
-      { symbol:"TECHM",     yf:"TECHM.NS",      name:"Tech Mahindra Ltd",         sector:"IT"         },
-      { symbol:"ULTRACEMCO",yf:"ULTRACEMCO.NS", name:"UltraTech Cement",          sector:"Cement"     },
-      { symbol:"JSWSTEEL",  yf:"JSWSTEEL.NS",   name:"JSW Steel Ltd",             sector:"Metals"     },
-      { symbol:"COALINDIA", yf:"COALINDIA.NS",  name:"Coal India Ltd",            sector:"Mining"     },
-      { symbol:"HINDALCO",  yf:"HINDALCO.NS",   name:"Hindalco Industries",       sector:"Metals"     },
-      { symbol:"BPCL",      yf:"BPCL.NS",       name:"Bharat Petroleum",          sector:"Energy"     },
-      { symbol:"EICHERMOT", yf:"EICHERMOT.NS",  name:"Eicher Motors Ltd",         sector:"Auto"       },
-      { symbol:"DIVISLAB",  yf:"DIVISLAB.NS",   name:"Divi's Laboratories",       sector:"Pharma"     },
-      { symbol:"BAJAJ-AUTO",yf:"BAJAJ-AUTO.NS", name:"Bajaj Auto Ltd",            sector:"Auto"       },
-      { symbol:"TATACONSUM",yf:"TATACONSUM.NS", name:"Tata Consumer Products",    sector:"FMCG"       },
-      { symbol:"ITC",       yf:"ITC.NS",        name:"ITC Ltd",                   sector:"FMCG"       },
-      { symbol:"M&M",       yf:"M%26M.NS",      name:"Mahindra & Mahindra",       sector:"Auto"       },
-      { symbol:"HEROMOTOCO",yf:"HEROMOTOCO.NS", name:"Hero MotoCorp Ltd",         sector:"Auto"       },
-      { symbol:"APOLLOHOSP",yf:"APOLLOHOSP.NS", name:"Apollo Hospitals",          sector:"Healthcare" },
-      { symbol:"SHREECEM",  yf:"SHREECEM.NS",   name:"Shree Cement Ltd",          sector:"Cement"     },
-      { symbol:"DABUR",     yf:"DABUR.NS",      name:"Dabur India Ltd",           sector:"FMCG"       },
-      { symbol:"PIDILITIND",yf:"PIDILITIND.NS", name:"Pidilite Industries",       sector:"Chemicals"  },
-      { symbol:"SIEMENS",   yf:"SIEMENS.NS",    name:"Siemens Ltd",               sector:"Engineering"},
-      { symbol:"AMBUJACEM", yf:"AMBUJACEM.NS",  name:"Ambuja Cements",            sector:"Cement"     },
-      { symbol:"ZOMATO",    yf:"ZOMATO.NS",     name:"Zomato Ltd",                sector:"Internet"   },
-      { symbol:"DMART",     yf:"DMART.NS",      name:"Avenue Supermarts (DMart)", sector:"Retail"     },
-      { symbol:"TRENT",     yf:"TRENT.NS",      name:"Trent Ltd",                 sector:"Retail"     },
-      { symbol:"HAVELLS",   yf:"HAVELLS.NS",    name:"Havells India Ltd",         sector:"Electricals"},
-      { symbol:"MUTHOOTFIN",yf:"MUTHOOTFIN.NS", name:"Muthoot Finance",           sector:"Finance"    },
-      { symbol:"PNB",       yf:"PNB.NS",        name:"Punjab National Bank",      sector:"Banking"    },
-      { symbol:"BANKBARODA",yf:"BANKBARODA.NS", name:"Bank of Baroda",            sector:"Banking"    },
-      { symbol:"VEDL",      yf:"VEDL.NS",       name:"Vedanta Ltd",               sector:"Metals"     },
-      { symbol:"SAIL",      yf:"SAIL.NS",       name:"Steel Authority of India",  sector:"Metals"     },
-      { symbol:"NIFTY50",   yf:"%5ENSEI",       name:"Nifty 50 Index",            sector:"Index"      },
-      { symbol:"BANKNIFTY", yf:"%5ENSEBANK",    name:"Nifty Bank Index",          sector:"Index"      },
-    ];
+const STOCKS = Array.from(new Map(NSE_STOCKS.map(s=>[s.s,s])).values());
 
-    const STOCK_MAP = Object.fromEntries(NSE_STOCKS.map(s => [s.symbol, s]));
+// ── Approximate seed prices (INR) - shown only before first fetch ──
+const SEED = {
+  RELIANCE:2945,TCS:4120,INFY:1890,HDFCBANK:1756,ICICIBANK:1298,HINDUNILVR:2430,
+  SBIN:832,BAJFINANCE:7845,BHARTIARTL:1654,KOTAKBANK:1923,LT:3689,ASIANPAINT:2876,
+  AXISBANK:1187,MARUTI:12450,TITAN:3765,SUNPHARMA:1765,WIPRO:567,HCLTECH:1876,
+  ONGC:287,NTPC:398,POWERGRID:345,NESTLEIND:24500,DRREDDY:6780,INDUSINDBK:1456,
+  GRASIM:2890,TATAMOTORS:987,TATASTEEL:178,ADANIENT:2987,ADANIPORTS:1456,CIPLA:1654,
+  TECHM:1567,ULTRACEMCO:10234,JSWSTEEL:987,COALINDIA:453,HINDALCO:678,BPCL:567,
+  EICHERMOT:4567,DIVISLAB:5678,"BAJAJ-AUTO":9876,TATACONSUM:1098,ITC:487,"M&M":3456,
+  HEROMOTOCO:5678,APOLLOHOSP:7654,SHREECEM:26789,DABUR:567,PIDILITIND:2987,
+  SIEMENS:8765,AMBUJACEM:678,ZOMATO:267,DMART:4567,TRENT:5678,HAVELLS:1876,
+  MUTHOOTFIN:2345,PNB:123,BANKBARODA:245,VEDL:467,SAIL:134,NIFTY50:24800,
+  BANKNIFTY:53200,HAL:4800,BEL:320,MRF:125000,BAJAJFINSV:1950,SBILIFE:1780,
+  HDFCLIFE:780,BRITANNIA:5200,NAUKRI:8900,IRCTC:990,GODREJCP:1200,BERGEPAINT:560,
+  COLPAL:3000,MARICO:680,TATAPOWER:480,ADANIGREEN:1900,ADANIPOWER:340,IOC:185,
+  GAIL:230,LUPIN:2300,AUROPHARMA:1350,BIOCON:380,TVSMOTOR:2800,ASHOKLEY:240,
+  ESCORTS:4200,MGL:1600,IGL:430,LICI:1100,RECLTD:680,CONCOR:1050,NHPC:100,
+  SJVN:145,NMDC:280,GODREJPROP:3500,OBEROIRLTY:2100,PRESTIGE:2200,PIIND:4800,
+  UPL:700,PAGEIND:45000,OFSS:12000,PERSISTENT:6800,COFORGE:8500,MPHASIS:3400,
+  TATAELXSI:8000,KPIT:2100,CHOLAFIN:1800,LICHSGFIN:700,MANAPPURAM:250,
+  BALKRISIND:3200,APOLLOTYRE:550,CUMMINSIND:4200,THERMAX:5500,VBL:650,
+  JUBLFOOD:850,ACC:2400,JKCEMENT:4800,TATACHEM:1200,JINDALSTEL:1100,JSWENERGY:720,
+  TORNTPOWER:1600,HINDPETRO:410,CANBK:110,UNIONBANK:135,IDFCFIRSTB:78,
+  FEDERALBNK:185,BANDHANBNK:200,YESBANK:22,AUBANK:650,HDFCAMC:4200,ICICIGI:1950,
+  ICICIPRULI:720,MFSL:1100,CGPOWER:700,DATAPATTNS:2900,SOLARINDS:11500,
+};
 
-    const SEED = {
-      RELIANCE:2945,TCS:4120,INFY:1890,HDFCBANK:1756,ICICIBANK:1298,HINDUNILVR:2430,
-      SBIN:832,BAJFINANCE:7845,BHARTIARTL:1654,KOTAKBANK:1923,LT:3689,ASIANPAINT:2876,
-      AXISBANK:1187,MARUTI:12450,TITAN:3765,SUNPHARMA:1765,WIPRO:567,HCLTECH:1876,
-      ONGC:287,NTPC:398,POWERGRID:345,NESTLEIND:24500,DRREDDY:6780,INDUSINDBK:1456,
-      GRASIM:2890,TATAMOTORS:987,TATASTEEL:178,ADANIENT:2987,ADANIPORTS:1456,CIPLA:1654,
-      TECHM:1567,ULTRACEMCO:10234,JSWSTEEL:987,COALINDIA:453,HINDALCO:678,BPCL:567,
-      EICHERMOT:4567,DIVISLAB:5678,"BAJAJ-AUTO":9876,TATACONSUM:1098,ITC:487,"M&M":3456,
-      HEROMOTOCO:5678,APOLLOHOSP:7654,SHREECEM:26789,DABUR:567,PIDILITIND:2987,
-      SIEMENS:8765,AMBUJACEM:678,ZOMATO:267,DMART:4567,TRENT:5678,HAVELLS:1876,
-      MUTHOOTFIN:2345,PNB:123,BANKBARODA:245,VEDL:467,SAIL:134,NIFTY50:24800,BANKNIFTY:53200,
-    };
+// ═══════════════════════════════════════════════════════════════════
+// REAL PRICE FETCHER — Multi-source with CORS proxy fallback chain
+// ═══════════════════════════════════════════════════════════════════
 
-    // ── Yahoo Finance Fetcher ──────────────────────────────────────────────────
-    async function fetchYFPrice(yfSymbol) {
-      const endpoints = [
-        `https://query1.finance.yahoo.com/v8/finance/chart/${yfSymbol}?interval=1m&range=1d`,
-        `https://query2.finance.yahoo.com/v8/finance/chart/${yfSymbol}?interval=1m&range=1d`,
-      ];
-      for (const url of endpoints) {
-        try {
-          const r = await fetch(url, { headers:{ Accept:"application/json" }, signal: AbortSignal.timeout(8000) });
-          if (!r.ok) continue;
-          const d = await r.json();
-          const price = d?.chart?.result?.[0]?.meta?.regularMarketPrice;
-          if (price) return parseFloat(price.toFixed(2));
-        } catch {}
+// Convert NSE symbol → Yahoo Finance ticker
+function toYF(sym) {
+  if (sym === "NIFTY50")    return "%5ENSEI";
+  if (sym === "BANKNIFTY")  return "%5ENSEBANK";
+  if (sym === "M&M")        return "M%26M.NS";
+  if (sym === "BAJAJ-AUTO") return "BAJAJ-AUTO.NS";
+  return sym + ".NS";
+}
+
+// CORS proxy list — tried in order until one works
+const PROXIES = [
+  // allorigins — wraps any URL, returns JSON with contents field
+  url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+  // corsproxy.io
+  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  // thingproxy
+  url => `https://thingproxy.freeboard.io/fetch/${url}`,
+];
+
+// Yahoo Finance v8 chart endpoint — most reliable source
+const YF_URL = sym =>
+  `https://query1.finance.yahoo.com/v8/finance/chart/${toYF(sym)}?interval=1m&range=1d`;
+const YF_URL2 = sym =>
+  `https://query2.finance.yahoo.com/v8/finance/chart/${toYF(sym)}?interval=1m&range=1d`;
+
+// Extract price from Yahoo Finance JSON response
+function parseYF(json) {
+  try {
+    // allorigins wraps in {contents: "..."}
+    const data = typeof json.contents === "string" ? JSON.parse(json.contents) : json;
+    const meta = data?.chart?.result?.[0]?.meta;
+    if (meta?.regularMarketPrice) return parseFloat(meta.regularMarketPrice.toFixed(2));
+  } catch {}
+  return null;
+}
+
+// Fetch one symbol — tries direct then proxies
+async function fetchOne(sym) {
+  const urls = [YF_URL(sym), YF_URL2(sym)];
+
+  // 1. Try direct (works when CORS is allowed — e.g. Netlify hosted)
+  for (const url of urls) {
+    try {
+      const r = await fetch(url, {
+        headers: { "Accept": "application/json" },
+        signal: AbortSignal.timeout(6000),
+      });
+      if (r.ok) {
+        const json = await r.json();
+        const p = parseYF(json);
+        if (p) return { price: p, src: "direct" };
       }
-      return null;
-    }
+    } catch {}
+  }
 
-    async function fetchBatchPrices(symbols) {
-      const results = {};
-      const BATCH = 4;
-      for (let i = 0; i < symbols.length; i += BATCH) {
-        await Promise.all(symbols.slice(i, i + BATCH).map(async sym => {
-          const stock = STOCK_MAP[sym];
-          if (!stock) return;
-          const p = await fetchYFPrice(stock.yf);
-          if (p) results[sym] = p;
-        }));
-      }
-      return results;
-    }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
-    const uid  = () => Math.random().toString(36).slice(2, 9);
-    const fmt  = n => new Intl.NumberFormat("en-IN", { maximumFractionDigits:2, minimumFractionDigits:2 }).format(n);
-    const fmtRs  = n => `₹${fmt(n)}`;
-    const fmtPct = n => `${n>=0?"+":""}${n.toFixed(2)}%`;
-    const now  = () => new Date().toISOString();
-
-    function calcStatus(stock, prices) {
-      if (stock.stopped) {
-        const c = stock.stoppedReason?.includes("SL")?"#ef4444":stock.stoppedReason?.includes("T3")?"#a855f7":stock.stoppedReason?.includes("T2")?"#3b82f6":"#22c55e";
-        const sp = stock.stoppedPrice ?? stock.entryPrice;
-        return { status:stock.stoppedReason, curr:sp, pnl:(sp-stock.entryPrice)*stock.qty, pct:((sp-stock.entryPrice)/stock.entryPrice)*100, color:c };
-      }
-      const curr = prices[stock.symbol] ?? stock.entryPrice;
-      const pnl  = (curr - stock.entryPrice) * stock.qty;
-      const pct  = ((curr - stock.entryPrice) / stock.entryPrice) * 100;
-      if (stock.stopLoss && curr <= stock.stopLoss) return { status:"SL Hit", curr, pnl, pct, color:"#ef4444", trigger:"sl" };
-      if (stock.t3 && curr >= stock.t3)             return { status:"T3 ✓",   curr, pnl, pct, color:"#a855f7", trigger:"t3" };
-      if (stock.t2 && curr >= stock.t2)             return { status:"T2 ✓",   curr, pnl, pct, color:"#3b82f6", trigger:"t2" };
-      if (stock.t1 && curr >= stock.t1)             return { status:"T1 ✓",   curr, pnl, pct, color:"#22c55e", trigger:"t1" };
-      return { status:"Active", curr, pnl, pct, color:"#38bdf8", trigger:null };
-    }
-
-    // ── localStorage persistence (works in every browser & PWA) ─────────────
-    const LS_GROUPS = "nsetrader_groups_v3";
-    const LS_PRICES = "nsetrader_prices_v3";
-    const LS_VIEW   = "nsetrader_view_v3";
-
-    function saveGroups(groups) {
-      try { localStorage.setItem(LS_GROUPS, JSON.stringify(groups)); } catch {}
-    }
-    function loadGroups() {
-      try { const v = localStorage.getItem(LS_GROUPS); return v ? JSON.parse(v) : []; } catch { return []; }
-    }
-    function savePriceCache(prices) {
-      try { localStorage.setItem(LS_PRICES, JSON.stringify({ prices, ts: Date.now() })); } catch {}
-    }
-    function loadPriceCache() {
+  // 2. Try via CORS proxies
+  for (const proxy of PROXIES) {
+    for (const yUrl of urls) {
       try {
-        const v = localStorage.getItem(LS_PRICES);
-        if (!v) return null;
-        const p = JSON.parse(v);
-        if (Date.now() - p.ts < 3 * 60 * 1000) return p.prices; // 3 min cache
+        const proxyUrl = proxy(yUrl);
+        const r = await fetch(proxyUrl, { signal: AbortSignal.timeout(8000) });
+        if (!r.ok) continue;
+        const json = await r.json();
+        const p = parseYF(json);
+        if (p) return { price: p, src: "proxy" };
       } catch {}
-      return null;
     }
-    function saveView(v) {
-      try { localStorage.setItem(LS_VIEW, JSON.stringify(v)); } catch {}
+  }
+
+  return null; // all sources failed
+}
+
+// Batch fetch — parallel groups of 3 to avoid throttling
+async function fetchBatch(symbols) {
+  const results = {};
+  const BATCH = 3;
+  for (let i = 0; i < symbols.length; i += BATCH) {
+    const slice = symbols.slice(i, i + BATCH);
+    const settled = await Promise.allSettled(slice.map(sym => fetchOne(sym)));
+    settled.forEach((r, idx) => {
+      if (r.status === "fulfilled" && r.value) {
+        results[slice[idx]] = r.value.price;
+      }
+    });
+    // Small delay to avoid rate limiting
+    if (i + BATCH < symbols.length) await new Promise(res => setTimeout(res, 300));
+  }
+  return results;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────
+const uid    = () => Math.random().toString(36).slice(2, 9);
+const fmtN   = n => new Intl.NumberFormat("en-IN", { maximumFractionDigits:2, minimumFractionDigits:2 }).format(n);
+const fmtRs  = n => `₹${fmtN(n)}`;
+const fmtPct = n => `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
+const now    = () => new Date().toISOString();
+
+function calcStatus(stock, prices) {
+  if (stock.stopped) {
+    const c = stock.stoppedReason?.includes("SL") ? "#ef4444"
+      : stock.stoppedReason?.includes("T3") ? "#a855f7"
+      : stock.stoppedReason?.includes("T2") ? "#3b82f6" : "#22c55e";
+    const sp = stock.stoppedPrice ?? stock.entryPrice;
+    return { status:stock.stoppedReason, curr:sp, pnl:(sp-stock.entryPrice)*stock.qty, pct:((sp-stock.entryPrice)/stock.entryPrice)*100, color:c };
+  }
+  const curr = prices[stock.symbol] ?? stock.entryPrice;
+  const pnl  = (curr - stock.entryPrice) * stock.qty;
+  const pct  = ((curr - stock.entryPrice) / stock.entryPrice) * 100;
+  if (stock.stopLoss && curr <= stock.stopLoss) return { status:"SL Hit", curr, pnl, pct, color:"#ef4444", trigger:"sl" };
+  if (stock.t3 && curr >= stock.t3)             return { status:"T3 ✓",   curr, pnl, pct, color:"#a855f7", trigger:"t3" };
+  if (stock.t2 && curr >= stock.t2)             return { status:"T2 ✓",   curr, pnl, pct, color:"#3b82f6", trigger:"t2" };
+  if (stock.t1 && curr >= stock.t1)             return { status:"T1 ✓",   curr, pnl, pct, color:"#22c55e", trigger:"t1" };
+  return { status:"Active", curr, pnl, pct, color:"#38bdf8", trigger:null };
+}
+
+// ── localStorage ──────────────────────────────────────────────────
+const LS = { G:"nse_g_v6", P:"nse_p_v6", V:"nse_v_v6" };
+const lsGet = k => { try { const v=localStorage.getItem(k); return v?JSON.parse(v):null; } catch { return null; } };
+const lsSet = (k,v) => { try { localStorage.setItem(k,JSON.stringify(v)); } catch {} };
+
+// ═══════════════════════════════════════════════════════════════════
+//  ROOT APP
+// ═══════════════════════════════════════════════════════════════════
+function App() {
+  const [groups,    setGroups]    = useState(() => lsGet(LS.G) || []);
+  const [prices,    setPrices]    = useState(() => {
+    const cached = lsGet(LS.P);
+    return { ...SEED, ...(cached && Date.now()-cached.ts < 300000 ? cached.d : {}) };
+  });
+  const [pStat,     setPStat]     = useState("idle");
+  const [lastUp,    setLastUp]    = useState(null);
+  const [fetchLog,  setFetchLog]  = useState("");
+  const [activeGid, setActiveGid] = useState(() => lsGet(LS.V)?.g || null);
+  const [view,      setView]      = useState(() => lsGet(LS.V)?.v || "dashboard");
+  const [modal,     setModal]     = useState(null);
+  const [notif,     setNotif]     = useState(null);
+  const [sideOpen,  setSideOpen]  = useState(false);
+  const gRef = useRef(groups); gRef.current = groups;
+  const pRef = useRef(prices); pRef.current = prices;
+
+  useEffect(() => { lsSet(LS.G, groups); }, [groups]);
+  useEffect(() => { lsSet(LS.V, { g:activeGid, v:view }); }, [activeGid, view]);
+
+  const fetchPrices = useCallback(async () => {
+    const syms = [...new Set([
+      ...gRef.current.flatMap(g => g.stocks.map(s => s.symbol)),
+      "RELIANCE","TCS","HDFCBANK","SBIN","ICICIBANK","TATAMOTORS","ITC","NIFTY50","BANKNIFTY"
+    ])];
+    setPStat("fetching");
+    setFetchLog(`Fetching ${syms.length} prices…`);
+
+    const fresh = await fetchBatch(syms);
+    const count = Object.keys(fresh).length;
+
+    if (count > 0) {
+      setPrices(prev => {
+        const next = { ...prev, ...fresh };
+        lsSet(LS.P, { d:next, ts:Date.now() });
+        return next;
+      });
+      setLastUp(new Date());
+      setPStat("ok");
+      setFetchLog(`✓ ${count}/${syms.length} prices live`);
+
+      // Auto-stop stocks that hit SL or final target
+      setGroups(prev => prev.map(g => ({
+        ...g,
+        stocks: g.stocks.map(s => {
+          if (s.stopped) return s;
+          const curr = fresh[s.symbol] ?? pRef.current[s.symbol] ?? s.entryPrice;
+          if (s.stopLoss && curr <= s.stopLoss)
+            return { ...s, stopped:true, stoppedReason:"SL Hit", stoppedPrice:curr };
+          const ft = s.t3 || s.t2 || s.t1;
+          if (ft && curr >= ft) {
+            const r = s.t3&&curr>=s.t3 ? "T3 ✓" : s.t2&&curr>=s.t2 ? "T2 ✓" : "T1 ✓";
+            return { ...s, stopped:true, stoppedReason:r, stoppedPrice:curr };
+          }
+          return s;
+        })
+      })));
+    } else {
+      setPStat("error");
+      setFetchLog("✕ All sources blocked. Check connection.");
     }
-    function loadView() {
-      try { const v = localStorage.getItem(LS_VIEW); return v ? JSON.parse(v) : {}; } catch { return {}; } 
-    }
+  }, []);
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    //  ROOT APP
-    // ═══════════════════════════════════════════════════════════════════════════
-    function App() {
-      const [groups,      setGroups]      = useState(() => loadGroups());
-      const [prices,      setPrices]      = useState(() => ({ ...SEED, ...(loadPriceCache() || {}) }));
-      const [pStatus,     setPStatus]     = useState("idle");
-      const [lastUpdated, setLastUpdated] = useState(null);
-      const [activeGid,   setActiveGid]   = useState(() => loadView().gid || null);
-      const [view,        setView]        = useState(() => loadView().view || "dashboard");
-      const [modal,       setModal]       = useState(null);
-      const [notif,       setNotif]       = useState(null);
-      const [sideOpen,    setSideOpen]    = useState(false);
-      const groupsRef = useRef(groups);
-      groupsRef.current = groups;
+  useEffect(() => {
+    fetchPrices();
+    const t = setInterval(fetchPrices, 60000);
+    return () => clearInterval(t);
+  }, []);
 
-      // Persist groups
-      useEffect(() => { saveGroups(groups); }, [groups]);
-      useEffect(() => { saveView({ gid: activeGid, view }); }, [activeGid, view]);
+  const toast = (msg, type="ok") => {
+    setNotif({ msg, type });
+    setTimeout(() => setNotif(null), 2800);
+  };
+  const go = (gid, v) => { setActiveGid(gid); setView(v); setSideOpen(false); };
 
-      // Fetch prices
-      const fetchPrices = useCallback(async () => {
-        const syms = [...new Set([
-          ...groupsRef.current.flatMap(g => g.stocks.map(s => s.symbol)),
-          "RELIANCE","TCS","HDFCBANK","INFY","SBIN","ICICIBANK","TATAMOTORS","ITC","ZOMATO","NIFTY50","BANKNIFTY"
-        ])];
-        setPStatus("fetching");
-        const fresh = await fetchBatchPrices(syms);
-        if (Object.keys(fresh).length > 0) {
-          setPrices(prev => {
-            const next = { ...prev, ...fresh };
-            savePriceCache(next);
-            return next;
-          });
-          setLastUpdated(new Date());
-          setPStatus("ok");
-          // Auto-stop
-          setGroups(prev => prev.map(g => ({
-            ...g,
-            stocks: g.stocks.map(s => {
-              if (s.stopped) return s;
-              const curr = fresh[s.symbol] ?? prices[s.symbol] ?? s.entryPrice;
-              if (s.stopLoss && curr <= s.stopLoss) return { ...s, stopped:true, stoppedReason:"SL Hit",  stoppedPrice:curr };
-              const ft = s.t3 || s.t2 || s.t1;
-              if (ft && curr >= ft) {
-                const r = s.t3&&curr>=s.t3?"T3 ✓":s.t2&&curr>=s.t2?"T2 ✓":"T1 ✓";
-                return { ...s, stopped:true, stoppedReason:r, stoppedPrice:curr };
-              }
-              return s;
-            })
-          })));
-        } else { setPStatus("error"); }
-      }, []);
+  const addGroup = ({ name, budget }) => {
+    const g = { id:uid(), name, budget:parseFloat(budget)||50000, stocks:[], createdAt:now() };
+    setGroups(p => [...p, g]); go(g.id, "group"); setModal(null); toast(`"${name}" created`);
+  };
+  const delGroup = id => {
+    const g = groups.find(x => x.id===id);
+    setGroups(p => p.filter(x => x.id!==id));
+    if (activeGid===id) go(null, "dashboard");
+    toast(`Deleted "${g?.name}"`, "err");
+  };
+  const addStock = (gid, data) => {
+    const grp  = groups.find(g => g.id===gid);
+    const entry = data.entryPrice > 0 ? data.entryPrice : (prices[data.symbol] ?? SEED[data.symbol] ?? 100);
+    const qty   = Math.max(1, Math.floor(grp.budget / entry));
+    setGroups(p => p.map(g => g.id!==gid ? g : {
+      ...g, stocks: [...g.stocks, { id:uid(), ...data, entryPrice:entry, qty, addedAt:now(), stopped:false, stoppedReason:null, stoppedPrice:null }]
+    }));
+    setModal(null); toast(`${data.symbol} added`);
+  };
+  const delStock = (gid, sid) => {
+    const stk = groups.find(g=>g.id===gid)?.stocks.find(s=>s.id===sid);
+    setGroups(p => p.map(g => g.id!==gid ? g : { ...g, stocks:g.stocks.filter(s=>s.id!==sid) }));
+    toast(`${stk?.symbol} removed`, "err");
+  };
 
-      useEffect(() => {
-        fetchPrices();
-        const t = setInterval(fetchPrices, 60000);
-        return () => clearInterval(t);
-      }, []);
+  const activeGroup = groups.find(g => g.id===activeGid);
+  const statColor   = { idle:"#64748b", fetching:"#f59e0b", ok:"#22c55e", error:"#ef4444" }[pStat];
 
-      const showNotif = (msg, type="ok") => {
-        setNotif({ msg, type });
-        setTimeout(() => setNotif(null), 2800);
-      };
+  return (
+    <div style={{ height:"100vh", display:"flex", flexDirection:"column", overflow:"hidden", background:"#020b18" }}>
+      {notif && <div className="notif" style={{ position:"fixed",top:14,right:14,zIndex:999,padding:"10px 16px",borderRadius:8,border:"1px solid",fontWeight:700,fontSize:13,background:notif.type==="err"?"#1a0808":"#081a0e",borderColor:notif.type==="err"?"#ef4444":"#22c55e",color:notif.type==="err"?"#ef4444":"#22c55e" }}>{notif.type==="err"?"✕":"✓"} {notif.msg}</div>}
+      {sideOpen && <div onClick={()=>setSideOpen(false)} style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:48 }}/>}
 
-      const navigate = (gid, v) => {
-        setActiveGid(gid); setView(v); setSideOpen(false);
-      };
-
-      // Group CRUD
-      const addGroup = ({ name, budget }) => {
-        const g = { id:uid(), name, budget:parseFloat(budget)||50000, stocks:[], createdAt:now() };
-        setGroups(p => [...p, g]);
-        navigate(g.id, "group"); setModal(null);
-        showNotif(`Group "${name}" created`);
-      };
-      const deleteGroup = id => {
-        const g = groups.find(x => x.id === id);
-        setGroups(p => p.filter(x => x.id !== id));
-        if (activeGid === id) navigate(null, "dashboard");
-        showNotif(`Deleted "${g?.name}"`, "err");
-      };
-      const addStock = (gid, data) => {
-        const grp = groups.find(g => g.id === gid);
-        const entry = prices[data.symbol] ?? SEED[data.symbol] ?? 100;
-        const qty   = Math.max(1, Math.floor(grp.budget / entry));
-        setGroups(p => p.map(g => g.id !== gid ? g : {
-          ...g, stocks:[...g.stocks, { id:uid(), ...data, entryPrice:entry, qty, addedAt:now(), stopped:false, stoppedReason:null, stoppedPrice:null }]
-        }));
-        setModal(null); showNotif(`${data.symbol} added`);
-      };
-      const deleteStock = (gid, sid) => {
-        const stk = groups.find(g=>g.id===gid)?.stocks.find(s=>s.id===sid);
-        setGroups(p => p.map(g => g.id!==gid?g:{...g,stocks:g.stocks.filter(s=>s.id!==sid)}));
-        showNotif(`${stk?.symbol} removed`, "err");
-      };
-
-      const activeGroup = groups.find(g => g.id === activeGid);
-      const isMobile = window.innerWidth <= 640;
-
-      return (
-        <div style={{ height:"100vh", display:"flex", flexDirection:"column", overflow:"hidden", background:"#020b18" }}>
-          {/* Notification */}
-          {notif && (
-            <div className="notif" style={{ position:"fixed", top:14, right:14, zIndex:999, padding:"10px 16px", borderRadius:8, border:"1px solid", fontWeight:700, fontSize:13, background: notif.type==="err"?"#1a0808":"#081a0e", borderColor:notif.type==="err"?"#ef4444":"#22c55e", color:notif.type==="err"?"#ef4444":"#22c55e" }}>
-              {notif.type==="err"?"✕":"✓"} {notif.msg}
-            </div>
-          )}
-
-          {/* Sidebar overlay for mobile */}
-          {sideOpen && <div onClick={()=>setSideOpen(false)} style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:48 }} />}
-
-          {/* Header */}
-          <header style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 14px", background:"#030d1c", borderBottom:"1px solid #0a1e36", flexShrink:0, minHeight:52 }}>
-            <button onClick={()=>setSideOpen(o=>!o)} style={{ background:"transparent",border:"none",color:"#38bdf8",fontSize:20,cursor:"pointer",padding:"0 4px",flexShrink:0 }}>☰</button>
-            <div style={{ display:"flex",alignItems:"center",gap:8,flexShrink:0 }}>
-              <span style={{ color:"#38bdf8",fontSize:18,fontWeight:900 }}>▲</span>
-              <div>
-                <div style={{ fontSize:14,fontWeight:800,color:"#38bdf8",letterSpacing:"0.06em",lineHeight:1 }}>NSE Paper Trader</div>
-                <div style={{ fontSize:8,color:"#334155",letterSpacing:"0.1em",textTransform:"uppercase" }}>Strategy Backtester</div>
-              </div>
-            </div>
-            <MarketStrip prices={prices} />
-            <PriceBadge status={pStatus} lastUpdated={lastUpdated} onRefresh={fetchPrices} />
-          </header>
-
-          {/* Body */}
-          <div className="layout" style={{ display:"flex", flex:1, overflow:"hidden", position:"relative" }}>
-            {/* Sidebar */}
-            <aside className={`sidebar${sideOpen?" open":""}`} style={{ width:200, background:"#030d1c", borderRight:"1px solid #0a1e36", padding:"14px 10px", display:"flex", flexDirection:"column", gap:4, overflowY:"auto", flexShrink:0, zIndex:49 }}>
-              <button className="navbtn" onClick={()=>navigate(null,"dashboard")} style={{ background:view==="dashboard"&&!activeGid?"#0c1f35":"transparent", border:"none",color:view==="dashboard"&&!activeGid?"#e2e8f0":"#64748b", padding:"9px 12px",borderRadius:6,cursor:"pointer",textAlign:"left",display:"flex",gap:8,alignItems:"center",fontSize:12,width:"100%",transition:"all 0.15s" }}>
-                ⊞ Dashboard
-              </button>
-              <div style={{ fontSize:9,color:"#1e3a5f",letterSpacing:"0.15em",padding:"10px 4px 4px",fontWeight:700 }}>GROUPS</div>
-              {groups.map(g => {
-                const gPnL = g.stocks.reduce((s,sk)=>s+calcStatus(sk,prices).pnl,0);
-                const isAct = activeGid===g.id && view==="group";
-                return (
-                  <button key={g.id} className="groupbtn" onClick={()=>navigate(g.id,"group")} style={{ background:isAct?"#0c1f35":"transparent", border:`1px solid ${isAct?"#38bdf8":"#0a1e36"}`, color:isAct?"#e2e8f0":"#94a3b8", padding:"8px 10px",borderRadius:6,cursor:"pointer",textAlign:"left",fontSize:12,display:"flex",flexDirection:"column",gap:1,width:"100%",transition:"all 0.15s" }}>
-                    <div style={{ fontWeight:700,color:isAct?"#e2e8f0":"#cbd5e1",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis" }}>{g.name}</div>
-                    <div style={{ fontSize:10,color:gPnL>=0?"#22c55e":"#ef4444" }}>{gPnL>=0?"▲":"▼"} {fmtRs(Math.abs(gPnL))}</div>
-                    <div style={{ fontSize:10,color:"#334155" }}>{g.stocks.length} stocks</div>
-                  </button>
-                );
-              })}
-              <button className="addbtn" onClick={()=>setModal("addGroup")} style={{ background:"transparent",border:"1px dashed #1e3a5f",color:"#38bdf8",padding:"8px 10px",borderRadius:6,cursor:"pointer",textAlign:"left",fontSize:12,display:"flex",gap:6,alignItems:"center",marginTop:6,width:"100%",transition:"all 0.15s" }}>
-                + New Group
-              </button>
-            </aside>
-
-            {/* Main */}
-            <main className="main-content" style={{ flex:1,padding:"18px",overflowY:"auto" }}>
-              {view==="dashboard" && <Dashboard groups={groups} prices={prices} setActiveGid={id=>{setActiveGid(id);setView("group");setSideOpen(false);}} setModal={setModal} />}
-              {view==="group" && activeGroup && (
-                <GroupView group={activeGroup} prices={prices}
-                  onAddStock={()=>setModal("addStock")}
-                  onDeleteGroup={()=>deleteGroup(activeGroup.id)}
-                  onDeleteStock={sid=>deleteStock(activeGroup.id,sid)} />
-              )}
-            </main>
-          </div>
-
-          {/* Modals */}
-          {modal==="addGroup"  && <AddGroupModal onAdd={addGroup} onClose={()=>setModal(null)} />}
-          {modal==="addStock" && activeGroup && <AddStockModal group={activeGroup} prices={prices} onAdd={d=>addStock(activeGroup.id,d)} onClose={()=>setModal(null)} />}
+      {/* ── Header ── */}
+      <header style={{ display:"flex",alignItems:"center",gap:8,padding:"10px 12px",background:"#030d1c",borderBottom:"1px solid #0a1e36",flexShrink:0 }}>
+        <button onClick={()=>setSideOpen(o=>!o)} style={{ background:"transparent",border:"none",color:"#38bdf8",fontSize:20,cursor:"pointer",padding:"0 4px",flexShrink:0 }}>☰</button>
+        <span style={{ color:"#38bdf8",fontSize:16,fontWeight:900,flexShrink:0 }}>▲</span>
+        <div style={{ flexShrink:0 }}>
+          <div style={{ fontSize:13,fontWeight:800,color:"#38bdf8",letterSpacing:"0.05em",lineHeight:1 }}>NSE Paper Trader</div>
+          <div style={{ fontSize:8,color:"#334155",letterSpacing:"0.1em",textTransform:"uppercase" }}>Nifty 300 · Real Prices</div>
         </div>
-      );
-    }
 
-    // ── Market Strip ──────────────────────────────────────────────────────────
-    function MarketStrip({ prices }) {
-      const SYMS = ["NIFTY50","BANKNIFTY","RELIANCE","TCS","HDFCBANK","SBIN","TATAMOTORS","ITC","ZOMATO"];
-      return (
-        <div className="market-strip" style={{ display:"flex",flex:1,overflowX:"auto",gap:0,minWidth:0 }}>
-          {SYMS.map(sym => {
-            const curr = prices[sym]||SEED[sym]||0, seed=SEED[sym]||curr, chg=seed?((curr-seed)/seed*100):0;
+        {/* Market strip */}
+        <div className="mktstrip" style={{ display:"flex",flex:1,overflowX:"auto",gap:0,minWidth:0 }}>
+          {["NIFTY50","BANKNIFTY","RELIANCE","TCS","SBIN","HDFCBANK","ITC","TATAMOTORS"].map(sym => {
+            const curr = prices[sym] || SEED[sym] || 0;
+            const seed = SEED[sym] || curr;
+            const chg  = seed ? ((curr-seed)/seed*100) : 0;
+            const live = !!prices[sym] && prices[sym] !== SEED[sym];
             return (
-              <div key={sym} style={{ display:"flex",alignItems:"center",gap:5,padding:"2px 10px",borderRight:"1px solid #0a1e36",flexShrink:0,fontSize:10 }}>
+              <div key={sym} style={{ display:"flex",alignItems:"center",gap:4,padding:"2px 8px",borderRight:"1px solid #0a1e36",flexShrink:0,fontSize:10 }}>
                 <span style={{ color:"#475569",fontWeight:700 }}>{sym}</span>
-                <span style={{ color:"#e2e8f0",fontWeight:600 }}>{fmtRs(curr)}</span>
+                <span style={{ color: live ? "#e2e8f0" : "#475569", fontWeight:600 }}>{fmtRs(curr)}</span>
                 <span style={{ color:chg>=0?"#22c55e":"#ef4444" }}>{fmtPct(chg)}</span>
               </div>
             );
           })}
         </div>
-      );
-    }
 
-    // ── Price Badge ───────────────────────────────────────────────────────────
-    function PriceBadge({ status, lastUpdated, onRefresh }) {
-      const C = { idle:"#475569", fetching:"#f59e0b", ok:"#22c55e", error:"#ef4444" };
-      const L = { idle:"WAIT", fetching:"…", ok:"LIVE", error:"OFF" };
-      return (
-        <div style={{ display:"flex",alignItems:"center",gap:6,flexShrink:0 }}>
-          <div style={{ display:"flex",alignItems:"center",gap:4,fontSize:10,color:C[status],fontWeight:700,padding:"3px 8px",background:`${C[status]}15`,border:`1px solid ${C[status]}40`,borderRadius:4 }}>
-            <span style={{ width:5,height:5,borderRadius:"50%",background:C[status],display:"inline-block",animation:status==="fetching"?"pulse 0.8s ease infinite":"none" }} />
-            {L[status]}
+        {/* Price status */}
+        <div style={{ display:"flex",flexDirection:"column",alignItems:"flex-end",gap:2,flexShrink:0 }}>
+          <div style={{ display:"flex",alignItems:"center",gap:5 }}>
+            <span style={{ fontSize:10,fontWeight:700,padding:"3px 8px",borderRadius:4,color:statColor,background:`${statColor}15`,border:`1px solid ${statColor}40` }}>
+              <span style={{ display:"inline-block",width:6,height:6,borderRadius:"50%",background:statColor,marginRight:4,animation:pStat==="fetching"?"pulse 0.8s ease infinite":"none",verticalAlign:"middle" }}/>
+              {pStat==="ok"?"LIVE":pStat==="fetching"?"…":"OFF"}
+            </span>
+            <button onClick={fetchPrices} title="Refresh prices" style={{ background:"transparent",border:"1px solid #1e3a5f",color:"#38bdf8",padding:"3px 8px",borderRadius:4,cursor:"pointer",fontSize:13 }}>↻</button>
           </div>
-          {lastUpdated && <div style={{ fontSize:9,color:"#334155",display:"none" }}>{lastUpdated.toLocaleTimeString("en-IN")}</div>}
-          <button onClick={onRefresh} style={{ background:"transparent",border:"1px solid #1e3a5f",color:"#38bdf8",padding:"3px 7px",borderRadius:4,cursor:"pointer",fontSize:12 }}>↻</button>
+          {lastUp && <span style={{ fontSize:9,color:"#334155" }}>{lastUp.toLocaleTimeString("en-IN")}</span>}
+          {fetchLog && <span style={{ fontSize:9,color:"#334155",maxWidth:160,textAlign:"right" }}>{fetchLog}</span>}
         </div>
-      );
-    }
+      </header>
 
-    // ── Dashboard ─────────────────────────────────────────────────────────────
-    function Dashboard({ groups, prices, setActiveGid, setModal }) {
-      const tInv = groups.reduce((s,g)=>s+g.stocks.reduce((a,sk)=>a+sk.entryPrice*sk.qty,0),0);
-      const tPnL = groups.reduce((s,g)=>s+g.stocks.reduce((a,sk)=>a+calcStatus(sk,prices).pnl,0),0);
-      const tPct = tInv?(tPnL/tInv)*100:0;
-      return (
-        <div className="fadeIn">
-          <div style={{ fontSize:20,fontWeight:800,color:"#f1f5f9",marginBottom:16 }}>Portfolio Overview</div>
-          <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10,marginBottom:20 }}>
-            {[
-              { label:"Groups",      val:groups.length,                                    c:"#38bdf8" },
-              { label:"Positions",   val:groups.reduce((s,g)=>s+g.stocks.length,0),        c:"#38bdf8" },
-              { label:"Invested",    val:fmtRs(tInv),                                      c:"#e2e8f0" },
-              { label:"Total P&L",   val:`${fmtRs(tPnL)} (${fmtPct(tPct)})`,              c:tPnL>=0?"#22c55e":"#ef4444" },
-            ].map(c=>(
-              <div key={c.label} style={{ background:"#030d1c",border:"1px solid #0a1e36",borderRadius:8,padding:"12px 14px" }}>
-                <div style={{ fontSize:9,color:"#475569",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:5 }}>{c.label}</div>
-                <div style={{ fontSize:16,fontWeight:800,color:c.c }}>{c.val}</div>
-              </div>
-            ))}
+      {/* ── Layout ── */}
+      <div style={{ display:"flex",flex:1,overflow:"hidden" }}>
+        {/* Sidebar */}
+        <aside className={`sidebar${sideOpen?" open":""}`} style={{ width:210,background:"#030d1c",borderRight:"1px solid #0a1e36",padding:"14px 10px",display:"flex",flexDirection:"column",gap:4,overflowY:"auto",flexShrink:0,zIndex:49 }}>
+          <button className="navbtn" onClick={()=>go(null,"dashboard")} style={{ background:view==="dashboard"&&!activeGid?"#0c1f35":"transparent",border:"none",color:view==="dashboard"&&!activeGid?"#e2e8f0":"#64748b",padding:"9px 12px",borderRadius:6,cursor:"pointer",textAlign:"left",display:"flex",gap:8,alignItems:"center",fontSize:12,width:"100%" }}>⊞ Dashboard</button>
+          <div style={{ fontSize:9,color:"#1e3a5f",letterSpacing:"0.15em",padding:"10px 4px 4px",fontWeight:700 }}>GROUPS ({groups.length})</div>
+          {groups.map(g => {
+            const gP = g.stocks.reduce((s,sk) => s+calcStatus(sk,prices).pnl, 0);
+            const isA = activeGid===g.id && view==="group";
+            return (
+              <button key={g.id} className="groupbtn" onClick={()=>go(g.id,"group")} style={{ background:isA?"#0c1f35":"transparent",border:`1px solid ${isA?"#38bdf8":"#0a1e36"}`,color:isA?"#e2e8f0":"#94a3b8",padding:"8px 10px",borderRadius:6,cursor:"pointer",textAlign:"left",fontSize:12,display:"flex",flexDirection:"column",gap:1,width:"100%",transition:"all 0.15s" }}>
+                <div style={{ fontWeight:700,color:isA?"#e2e8f0":"#cbd5e1",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis" }}>{g.name}</div>
+                <div style={{ fontSize:10,color:gP>=0?"#22c55e":"#ef4444" }}>{gP>=0?"▲":"▼"} {fmtRs(Math.abs(gP))}</div>
+                <div style={{ fontSize:10,color:"#334155" }}>{g.stocks.length} stocks</div>
+              </button>
+            );
+          })}
+          <button className="addbtn" onClick={()=>setModal("addGroup")} style={{ background:"transparent",border:"1px dashed #1e3a5f",color:"#38bdf8",padding:"8px 10px",borderRadius:6,cursor:"pointer",textAlign:"left",fontSize:12,display:"flex",gap:6,alignItems:"center",marginTop:6,width:"100%" }}>+ New Group</button>
+
+          {/* Debug info at bottom of sidebar */}
+          <div style={{ marginTop:"auto",padding:"8px 4px",fontSize:9,color:"#1e3a5f",lineHeight:1.6,borderTop:"1px solid #0a1e36" }}>
+            <div>Prices fetched: {Object.keys(prices).filter(k=>prices[k]!==SEED[k]).length}</div>
+            <div>Source: Yahoo Finance</div>
+            <div>Via CORS proxy chain</div>
           </div>
-          {groups.length===0 ? (
-            <div style={{ textAlign:"center",padding:"50px 20px",color:"#475569" }}>
-              <div style={{ fontSize:40,marginBottom:12 }}>📊</div>
-              <div style={{ marginBottom:16 }}>Create a group to start testing your strategy</div>
-              <button style={BS.primary} onClick={()=>setModal("addGroup")}>+ Create First Group</button>
+        </aside>
+
+        {/* Main */}
+        <main className="main-content" style={{ flex:1,padding:"16px",overflowY:"auto" }}>
+          {view==="dashboard" && <Dashboard groups={groups} prices={prices} go={go} setModal={setModal} pStat={pStat} fetchPrices={fetchPrices}/>}
+          {view==="group" && activeGroup && (
+            <GroupView group={activeGroup} prices={prices}
+              onAddStock={() => setModal("addStock")}
+              onDelGroup={() => delGroup(activeGroup.id)}
+              onDelStock={sid => delStock(activeGroup.id, sid)}
+            />
+          )}
+        </main>
+      </div>
+
+      {modal==="addGroup" && <AddGroupModal onAdd={addGroup} onClose={()=>setModal(null)}/>}
+      {modal==="addStock" && activeGroup && (
+        <AddStockModal group={activeGroup} prices={prices} onAdd={d=>addStock(activeGroup.id,d)} onClose={()=>setModal(null)}/>
+      )}
+    </div>
+  );
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────
+function Dashboard({ groups, prices, go, setModal, pStat, fetchPrices }) {
+  const tI = groups.reduce((s,g)=>s+g.stocks.reduce((a,sk)=>a+sk.entryPrice*sk.qty,0),0);
+  const tP = groups.reduce((s,g)=>s+g.stocks.reduce((a,sk)=>a+calcStatus(sk,prices).pnl,0),0);
+  const tPct = tI ? (tP/tI)*100 : 0;
+
+  return (
+    <div className="fadeIn">
+      <div style={{ fontSize:18,fontWeight:800,color:"#f1f5f9",marginBottom:14 }}>Portfolio Overview</div>
+
+      {pStat==="error" && (
+        <div style={{ background:"#1a0808",border:"1px solid #ef444440",borderRadius:8,padding:"12px 16px",marginBottom:14,fontSize:12,color:"#ef4444",display:"flex",alignItems:"center",gap:12 }}>
+          <span style={{ fontSize:20 }}>⚠️</span>
+          <div>
+            <div style={{ fontWeight:700,marginBottom:2 }}>Live prices unavailable</div>
+            <div style={{ color:"#94a3b8",fontSize:11 }}>CORS proxies blocked. Showing last cached or seed prices. Try refreshing or check your internet connection.</div>
+          </div>
+          <button onClick={fetchPrices} style={{ ...BS.primary,marginLeft:"auto",flexShrink:0,fontSize:11 }}>↻ Retry</button>
+        </div>
+      )}
+
+      <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:8,marginBottom:18 }}>
+        {[
+          [groups.length,           "Groups",    "#38bdf8"],
+          [groups.reduce((s,g)=>s+g.stocks.length,0), "Positions", "#38bdf8"],
+          [fmtRs(tI),               "Invested",  "#e2e8f0"],
+          [`${fmtRs(tP)} (${fmtPct(tPct)})`, "P&L", tP>=0?"#22c55e":"#ef4444"],
+        ].map(([v,l,c],i) => (
+          <div key={i} style={{ background:"#030d1c",border:"1px solid #0a1e36",borderRadius:8,padding:"10px 12px" }}>
+            <div style={{ fontSize:9,color:"#475569",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:3 }}>{l}</div>
+            <div style={{ fontSize:15,fontWeight:800,color:c }}>{v}</div>
+          </div>
+        ))}
+      </div>
+
+      {groups.length===0 ? (
+        <div style={{ textAlign:"center",padding:"50px 20px",color:"#475569" }}>
+          <div style={{ fontSize:40,marginBottom:12 }}>📊</div>
+          <div style={{ marginBottom:16 }}>Create a group to start testing your strategy</div>
+          <button style={BS.primary} onClick={()=>setModal("addGroup")}>+ Create First Group</button>
+        </div>
+      ) : (
+        <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(230px,1fr))",gap:10 }}>
+          {groups.map(g => {
+            const inv = g.stocks.reduce((s,sk)=>s+sk.entryPrice*sk.qty,0);
+            const pnl = g.stocks.reduce((s,sk)=>s+calcStatus(sk,prices).pnl,0);
+            const pct = inv ? (pnl/inv)*100 : 0;
+            return (
+              <div key={g.id} className="gcard" onClick={()=>go(g.id,"group")} style={{ background:"#030d1c",border:"1px solid #0a1e36",borderRadius:8,padding:14,cursor:"pointer" }}>
+                <div style={{ display:"flex",justifyContent:"space-between",marginBottom:10 }}>
+                  <div style={{ fontWeight:700,color:"#e2e8f0",fontSize:13 }}>{g.name}</div>
+                  <div style={{ fontSize:9,color:"#38bdf8",background:"#38bdf811",border:"1px solid #38bdf830",padding:"2px 6px",borderRadius:3 }}>₹{(g.budget/1000).toFixed(0)}K</div>
+                </div>
+                <div style={{ display:"flex",gap:10,marginBottom:10,fontSize:11 }}>
+                  <span style={{ color:"#64748b" }}>Total <b style={{ color:"#94a3b8" }}>{g.stocks.length}</b></span>
+                  <span style={{ color:"#22c55e" }}>Active <b>{g.stocks.filter(s=>!s.stopped).length}</b></span>
+                  {g.stocks.filter(s=>s.stopped).length>0 && <span style={{ color:"#f59e0b" }}>Closed <b>{g.stocks.filter(s=>s.stopped).length}</b></span>}
+                </div>
+                <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-end" }}>
+                  <div>
+                    <div style={{ fontSize:9,color:"#475569" }}>P&L</div>
+                    <div style={{ fontSize:17,fontWeight:800,color:pnl>=0?"#22c55e":"#ef4444" }}>{fmtRs(pnl)}</div>
+                  </div>
+                  <div style={{ fontSize:13,fontWeight:700,color:pct>=0?"#22c55e":"#ef4444" }}>{fmtPct(pct)}</div>
+                </div>
+                <div style={{ height:2,background:"#0f1f35",borderRadius:1,marginTop:10 }}>
+                  <div style={{ height:2,width:`${Math.min(100,Math.abs(pct)*8)}%`,background:pnl>=0?"#22c55e":"#ef4444",borderRadius:1 }}/>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Group View ────────────────────────────────────────────────────
+function GroupView({ group, prices, onAddStock, onDelGroup, onDelStock }) {
+  const [confirm, setConfirm] = useState(null);
+  const inv = group.stocks.reduce((s,sk)=>s+sk.entryPrice*sk.qty,0);
+  const pnl = group.stocks.reduce((s,sk)=>s+calcStatus(sk,prices).pnl,0);
+  const pct = inv ? (pnl/inv)*100 : 0;
+
+  return (
+    <div className="fadeIn">
+      {confirm && (
+        <div style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.75)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:16 }}>
+          <div style={{ background:"#030d1c",border:"1px solid #ef444450",borderRadius:10,padding:22,maxWidth:300,width:"100%" }}>
+            <div style={{ color:"#e2e8f0",fontWeight:600,marginBottom:14 }}>{confirm.msg}</div>
+            <div style={{ display:"flex",gap:10,justifyContent:"flex-end" }}>
+              <button style={BS.cancel} onClick={()=>setConfirm(null)}>Cancel</button>
+              <button style={BS.danger} onClick={()=>{ confirm.fn(); setConfirm(null); }}>Delete</button>
             </div>
-          ) : (
-            <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:12 }}>
-              {groups.map(g=>{
-                const inv=g.stocks.reduce((s,sk)=>s+sk.entryPrice*sk.qty,0);
-                const pnl=g.stocks.reduce((s,sk)=>s+calcStatus(sk,prices).pnl,0);
-                const pct=inv?(pnl/inv)*100:0;
-                const active=g.stocks.filter(s=>!s.stopped).length;
-                const closed=g.stocks.filter(s=>s.stopped).length;
+          </div>
+        </div>
+      )}
+
+      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12,flexWrap:"wrap",gap:8 }}>
+        <div>
+          <div style={{ fontSize:19,fontWeight:800,color:"#f1f5f9" }}>{group.name}</div>
+          <div style={{ fontSize:11,color:"#475569" }}>₹{fmtN(group.budget)}/stock · {group.stocks.length} positions</div>
+        </div>
+        <div style={{ display:"flex",gap:8 }}>
+          <button style={BS.primary} onClick={onAddStock}>+ Add Stock</button>
+          <button style={BS.danger} onClick={()=>setConfirm({ msg:`Delete "${group.name}"?`, fn:onDelGroup })}>🗑 Delete</button>
+        </div>
+      </div>
+
+      {/* Summary bar */}
+      <div style={{ display:"flex",flexWrap:"wrap",background:"#030d1c",border:"1px solid #0a1e36",borderRadius:8,padding:"12px 14px",marginBottom:14 }}>
+        {[
+          ["Invested",  fmtRs(inv),    "#e2e8f0"],
+          ["Curr Value",fmtRs(inv+pnl),"#e2e8f0"],
+          ["P&L ₹",     fmtRs(pnl),   pnl>=0?"#22c55e":"#ef4444"],
+          ["P&L %",     fmtPct(pct),  pct>=0?"#22c55e":"#ef4444"],
+          ["Active",    group.stocks.filter(s=>!s.stopped).length, "#38bdf8"],
+          ["Closed",    group.stocks.filter(s=>s.stopped).length,  "#f59e0b"],
+        ].map(([l,v,c],i) => (
+          <div key={i} style={{ flex:"1 1 80px",padding:"0 10px 4px 0",minWidth:75 }}>
+            <div style={{ fontSize:9,color:"#475569",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:2 }}>{l}</div>
+            <div style={{ fontSize:14,fontWeight:800,color:c }}>{v}</div>
+          </div>
+        ))}
+      </div>
+
+      {group.stocks.length===0 ? (
+        <div style={{ textAlign:"center",padding:"40px 20px",color:"#475569" }}>
+          <div style={{ fontSize:30,marginBottom:10 }}>🔍</div>
+          <div style={{ marginBottom:14 }}>No stocks yet.</div>
+          <button style={BS.primary} onClick={onAddStock}>+ Add First Stock</button>
+        </div>
+      ) : (
+        <div style={{ overflowX:"auto",border:"1px solid #0a1e36",borderRadius:8 }}>
+          <table style={{ width:"100%",borderCollapse:"collapse",background:"#030d1c",fontSize:12,minWidth:700 }}>
+            <thead>
+              <tr>
+                {["Symbol","Entry ₹","Live ₹","Qty","SL","T1","T2","T3","Days","P&L ₹","P&L %","Status",""].map(h => (
+                  <th key={h} style={{ padding:"8px 8px",fontSize:9,color:"#334155",letterSpacing:"0.1em",textTransform:"uppercase",textAlign:"left",borderBottom:"1px solid #0a1e36",background:"#020b18",whiteSpace:"nowrap" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {group.stocks.map(stock => {
+                const info = calcStatus(stock, prices);
+                const up   = info.curr >= stock.entryPrice;
+                const isLive = prices[stock.symbol] && prices[stock.symbol] !== SEED[stock.symbol];
                 return (
-                  <div key={g.id} className="gcard" onClick={()=>setActiveGid(g.id)} style={{ background:"#030d1c",border:"1px solid #0a1e36",borderRadius:8,padding:14,cursor:"pointer" }}>
-                    <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10 }}>
-                      <div style={{ fontWeight:700,color:"#e2e8f0",fontSize:14 }}>{g.name}</div>
-                      <div style={{ fontSize:9,color:"#38bdf8",background:"#38bdf811",border:"1px solid #38bdf830",padding:"2px 6px",borderRadius:3 }}>₹{(g.budget/1000).toFixed(0)}K</div>
-                    </div>
-                    <div style={{ display:"flex",gap:10,marginBottom:12,fontSize:11 }}>
-                      <span style={{ color:"#64748b" }}>Total <strong style={{ color:"#94a3b8" }}>{g.stocks.length}</strong></span>
-                      <span style={{ color:"#22c55e" }}>Active <strong>{active}</strong></span>
-                      {closed>0&&<span style={{ color:"#f59e0b" }}>Closed <strong>{closed}</strong></span>}
-                    </div>
-                    <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-end" }}>
-                      <div>
-                        <div style={{ fontSize:9,color:"#475569",marginBottom:2 }}>P&L</div>
-                        <div style={{ fontSize:18,fontWeight:800,color:pnl>=0?"#22c55e":"#ef4444" }}>{fmtRs(pnl)}</div>
-                      </div>
-                      <div style={{ fontSize:14,fontWeight:700,color:pct>=0?"#22c55e":"#ef4444" }}>{fmtPct(pct)}</div>
-                    </div>
-                    <div style={{ height:2,background:"#0f1f35",borderRadius:1,marginTop:10 }}>
-                      <div style={{ height:2,width:`${Math.min(100,Math.abs(pct)*8)}%`,background:pnl>=0?"#22c55e":"#ef4444",borderRadius:1 }} />
-                    </div>
+                  <tr key={stock.id} className="strow" style={{ borderBottom:"1px solid #0a1e3650",opacity:stock.stopped?0.65:1 }}>
+                    <td style={{ padding:"8px 8px",whiteSpace:"nowrap" }}>
+                      <div style={{ fontWeight:700,color:"#e2e8f0" }}>{stock.symbol}</div>
+                      <div style={{ fontSize:9,color:"#475569" }}>{stock.sector}</div>
+                    </td>
+                    <td style={{ padding:"8px 8px",whiteSpace:"nowrap",color:"#f59e0b",fontWeight:600 }}>{fmtRs(stock.entryPrice)}</td>
+                    <td style={{ padding:"8px 8px",fontWeight:700,whiteSpace:"nowrap" }}>
+                      <span style={{ color:up?"#22c55e":"#ef4444" }}>{fmtRs(info.curr)}</span>
+                      {!isLive && !stock.stopped && <span style={{ fontSize:8,color:"#334155",marginLeft:3 }}>~</span>}
+                    </td>
+                    <td style={{ padding:"8px 8px",whiteSpace:"nowrap" }}>{stock.qty}</td>
+                    <td style={{ padding:"8px 8px",color:"#ef444499",whiteSpace:"nowrap" }}>{stock.stopLoss?fmtRs(stock.stopLoss):"—"}</td>
+                    <td style={{ padding:"8px 8px",color:"#22c55e99",whiteSpace:"nowrap" }}>{stock.t1?fmtRs(stock.t1):"—"}</td>
+                    <td style={{ padding:"8px 8px",color:"#3b82f699",whiteSpace:"nowrap" }}>{stock.t2?fmtRs(stock.t2):"—"}</td>
+                    <td style={{ padding:"8px 8px",color:"#a855f799",whiteSpace:"nowrap" }}>{stock.t3?fmtRs(stock.t3):"—"}</td>
+                    <td style={{ padding:"8px 8px",fontSize:10,color:"#475569",whiteSpace:"nowrap" }}>
+                      {[stock.t1Days&&`T1:${stock.t1Days}d`,stock.t2Days&&`T2:${stock.t2Days}d`,stock.t3Days&&`T3:${stock.t3Days}d`].filter(Boolean).join(" ")||"—"}
+                    </td>
+                    <td style={{ padding:"8px 8px",fontWeight:800,color:info.pnl>=0?"#22c55e":"#ef4444",whiteSpace:"nowrap" }}>{fmtRs(info.pnl)}</td>
+                    <td style={{ padding:"8px 8px",color:info.pct>=0?"#22c55e":"#ef4444",whiteSpace:"nowrap" }}>{fmtPct(info.pct)}</td>
+                    <td style={{ padding:"8px 8px",whiteSpace:"nowrap" }}>
+                      <span style={{ padding:"2px 6px",borderRadius:4,fontSize:10,fontWeight:700,color:info.color,background:`${info.color}15`,border:`1px solid ${info.color}40` }}>{info.status}</span>
+                    </td>
+                    <td style={{ padding:"8px 6px" }}>
+                      <button className="delBtn" style={{ background:"transparent",border:"none",color:"#334155",cursor:"pointer",fontSize:13,padding:"2px 6px",borderRadius:4,transition:"color 0.15s" }}
+                        onClick={()=>setConfirm({ msg:`Remove ${stock.symbol}?`, fn:()=>onDelStock(stock.id) })}>✕</button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <div style={{ padding:"6px 10px",fontSize:9,color:"#334155",borderTop:"1px solid #0a1e36" }}>
+            ~ = seed/cached price · Live prices update every 60s via Yahoo Finance
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Add Group Modal ───────────────────────────────────────────────
+function AddGroupModal({ onAdd, onClose }) {
+  const [name, setName]     = useState("");
+  const [budget, setBudget] = useState("50000");
+  return (
+    <Modal title="Create New Group" onClose={onClose}>
+      <Fld label="Group Name">
+        <input style={BS.input} value={name} onChange={e=>setName(e.target.value)}
+          placeholder="e.g. Banking Momentum Play" autoFocus
+          onKeyDown={e=>e.key==="Enter"&&name.trim()&&onAdd({name:name.trim(),budget})}/>
+      </Fld>
+      <Fld label="Budget per Stock (₹)">
+        <input style={BS.input} type="number" value={budget} onChange={e=>setBudget(e.target.value)} placeholder="50000"/>
+      </Fld>
+      <div style={{ display:"flex",gap:10,justifyContent:"flex-end",marginTop:18 }}>
+        <button style={BS.cancel} onClick={onClose}>Cancel</button>
+        <button style={{ ...BS.primary,opacity:name.trim()?1:0.4 }} disabled={!name.trim()} onClick={()=>onAdd({name:name.trim(),budget})}>Create Group</button>
+      </div>
+    </Modal>
+  );
+}
+
+// ── Add Stock Modal ───────────────────────────────────────────────
+function AddStockModal({ group, prices, onAdd, onClose }) {
+  const [query,   setQuery]   = useState("");
+  const [sel,     setSel]     = useState(null);
+  const [sugs,    setSugs]    = useState([]);
+  const [entryPx, setEntryPx] = useState("");
+  const [sl,  setSl]  = useState("");
+  const [t1,  setT1]  = useState(""); const [t1d, setT1d] = useState("");
+  const [t2,  setT2]  = useState(""); const [t2d, setT2d] = useState("");
+  const [t3,  setT3]  = useState(""); const [t3d, setT3d] = useState("");
+
+  const livePrice = sel ? (prices[sel.s] ?? SEED[sel.s] ?? null) : null;
+  const isLive    = sel && prices[sel.s] && prices[sel.s] !== SEED[sel.s];
+  const effEntry  = entryPx && parseFloat(entryPx)>0 ? parseFloat(entryPx) : livePrice ?? 100;
+  const qty       = Math.max(1, Math.floor(group.budget / effEntry));
+
+  const onQuery = v => {
+    setQuery(v); setSel(null); setEntryPx("");
+    if (!v.trim()) { setSugs([]); return; }
+    const q = v.toLowerCase();
+    setSugs(STOCKS.filter(s => s.s.toLowerCase().includes(q) || s.n.toLowerCase().includes(q) || s.sec.toLowerCase().includes(q)).slice(0, 10));
+  };
+
+  const pick = s => {
+    setSel(s); setQuery(s.s); setSugs([]);
+    const lp = prices[s.s] ?? SEED[s.s];
+    setEntryPx(lp ? String(lp) : "");
+  };
+
+  const ok = sel && entryPx && parseFloat(entryPx)>0 && (sl||t1||t2||t3);
+
+  return (
+    <Modal title={`Add Stock → ${group.name}`} onClose={onClose} wide>
+      <Fld label={`Search ${STOCKS.length} Nifty 300 Stocks`}>
+        <div style={{ position:"relative" }}>
+          <input style={BS.input} value={query} onChange={e=>onQuery(e.target.value)}
+            placeholder="Type symbol, company or sector… e.g. SBIN, Tata, Banking" autoFocus/>
+          {sugs.length>0 && (
+            <div style={{ position:"absolute",top:"100%",left:0,right:0,background:"#030d1c",border:"1px solid #0a1e36",borderRadius:6,zIndex:200,maxHeight:260,overflowY:"auto",boxShadow:"0 8px 32px rgba(0,0,0,0.8)" }}>
+              {sugs.map(s => {
+                const p = prices[s.s] ?? SEED[s.s];
+                const live = prices[s.s] && prices[s.s] !== SEED[s.s];
+                return (
+                  <div key={s.s} className="sug" style={{ display:"flex",alignItems:"center",gap:6,padding:"10px 12px",borderBottom:"1px solid #0a1e3640",fontSize:12 }} onClick={()=>pick(s)}>
+                    <span style={{ fontWeight:700,color:"#38bdf8",minWidth:90,flexShrink:0 }}>{s.s}</span>
+                    <span style={{ color:"#94a3b8",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{s.n}</span>
+                    <span style={{ fontSize:9,color:"#475569",padding:"1px 5px",background:"#0f2a44",borderRadius:3,flexShrink:0 }}>{s.sec}</span>
+                    <span style={{ color:live?"#22c55e":"#f59e0b",fontWeight:700,flexShrink:0,minWidth:68,textAlign:"right" }}>
+                      {p ? fmtRs(p) : "—"}
+                      {live && <span style={{ fontSize:8,color:"#22c55e",marginLeft:2 }}>●</span>}
+                    </span>
                   </div>
                 );
               })}
             </div>
           )}
         </div>
-      );
-    }
+      </Fld>
 
-    // ── Group View ────────────────────────────────────────────────────────────
-    function GroupView({ group, prices, onAddStock, onDeleteGroup, onDeleteStock }) {
-      const [confirm, setConfirm] = useState(null);
-      const inv  = group.stocks.reduce((s,sk)=>s+sk.entryPrice*sk.qty,0);
-      const pnl  = group.stocks.reduce((s,sk)=>s+calcStatus(sk,prices).pnl,0);
-      const pct  = inv?(pnl/inv)*100:0;
-      return (
-        <div className="fadeIn">
-          {confirm && (
-            <div style={{ position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:16 }}>
-              <div style={{ background:"#030d1c",border:"1px solid #ef444450",borderRadius:10,padding:22,maxWidth:320,width:"100%" }}>
-                <div style={{ color:"#e2e8f0",fontWeight:600,marginBottom:14 }}>{confirm.msg}</div>
-                <div style={{ display:"flex",gap:10,justifyContent:"flex-end" }}>
-                  <button style={BS.cancel} onClick={()=>setConfirm(null)}>Cancel</button>
-                  <button style={BS.danger} onClick={()=>{confirm.action();setConfirm(null);}}>Delete</button>
+      {sel && (
+        <>
+          <div style={{ background:"#020b18",border:"1px solid #0a1e36",borderRadius:8,padding:"10px 14px",marginBottom:12,display:"flex",flexWrap:"wrap",gap:16 }}>
+            <div><div style={{ fontSize:9,color:"#475569",textTransform:"uppercase",marginBottom:2 }}>Company</div><div style={{ fontWeight:700,color:"#e2e8f0",fontSize:13 }}>{sel.n}</div></div>
+            <div><div style={{ fontSize:9,color:"#475569",textTransform:"uppercase",marginBottom:2 }}>Sector</div><div style={{ fontWeight:700,color:"#94a3b8",fontSize:13 }}>{sel.sec}</div></div>
+            {livePrice && (
+              <div>
+                <div style={{ fontSize:9,color:"#475569",textTransform:"uppercase",marginBottom:2 }}>
+                  {isLive ? "🟢 Live Price (Yahoo)" : "⚠️ Cached/Seed Price"}
                 </div>
+                <div style={{ fontWeight:700,color:isLive?"#22c55e":"#f59e0b",fontSize:14 }}>{fmtRs(livePrice)}</div>
               </div>
-            </div>
-          )}
-
-          <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14,flexWrap:"wrap",gap:10 }}>
-            <div>
-              <div style={{ fontSize:20,fontWeight:800,color:"#f1f5f9" }}>{group.name}</div>
-              <div style={{ fontSize:11,color:"#475569" }}>₹{fmt(group.budget)}/stock · {group.stocks.length} positions</div>
-            </div>
-            <div style={{ display:"flex",gap:8,flexWrap:"wrap" }}>
-              <button style={BS.primary} onClick={onAddStock}>+ Add Stock</button>
-              <button style={BS.danger} onClick={()=>setConfirm({msg:`Delete group "${group.name}"?`,action:onDeleteGroup})}>🗑 Delete</button>
-            </div>
+            )}
+            {entryPx && parseFloat(entryPx)>0 && (
+              <>
+                <div><div style={{ fontSize:9,color:"#475569",textTransform:"uppercase",marginBottom:2 }}>Qty (₹{(group.budget/1000).toFixed(0)}K budget)</div><div style={{ fontWeight:700,color:"#38bdf8",fontSize:13 }}>{qty} shares</div></div>
+                <div><div style={{ fontSize:9,color:"#475569",textTransform:"uppercase",marginBottom:2 }}>Your Investment</div><div style={{ fontWeight:700,color:"#e2e8f0",fontSize:13 }}>{fmtRs(qty*parseFloat(entryPx))}</div></div>
+              </>
+            )}
           </div>
 
-          {/* Summary bar */}
-          <div style={{ display:"flex",flexWrap:"wrap",background:"#030d1c",border:"1px solid #0a1e36",borderRadius:8,padding:"12px 16px",marginBottom:16,gap:0 }}>
-            {[
-              ["Invested",     fmtRs(inv),        "#e2e8f0"],
-              ["Value",        fmtRs(inv+pnl),    "#e2e8f0"],
-              ["P&L ₹",        fmtRs(pnl),        pnl>=0?"#22c55e":"#ef4444"],
-              ["P&L %",        fmtPct(pct),       pct>=0?"#22c55e":"#ef4444"],
-              ["Active",       group.stocks.filter(s=>!s.stopped).length, "#38bdf8"],
-              ["Closed",       group.stocks.filter(s=>s.stopped).length,  "#f59e0b"],
-            ].map(([l,v,c],i)=>(
-              <div key={i} style={{ flex:"1 1 90px",padding:"0 10px 4px 0",minWidth:80 }}>
-                <div style={{ fontSize:9,color:"#475569",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:3 }}>{l}</div>
-                <div style={{ fontSize:15,fontWeight:800,color:c }}>{v}</div>
+          {/* ★ Entry Price */}
+          <div style={{ background:"#0c1a08",border:"2px solid #f59e0b",borderRadius:8,padding:"12px 14px",marginBottom:14 }}>
+            <label style={{ display:"block",fontSize:11,color:"#f59e0b",fontWeight:800,letterSpacing:"0.06em",textTransform:"uppercase",marginBottom:6 }}>
+              ★ Your Buy Price (₹) — Enter your actual purchase price
+            </label>
+            <input
+              style={{ ...BS.input,fontSize:16,fontWeight:700,color:"#f59e0b",borderColor:"#f59e0b50",background:"#020b18",padding:"11px 14px" }}
+              type="number" value={entryPx} onChange={e=>setEntryPx(e.target.value)}
+              placeholder={livePrice ? `Live: ${livePrice} — enter your actual buy price` : "Enter buy price"}
+            />
+            {livePrice && entryPx && parseFloat(entryPx)>0 && (
+              <div style={{ display:"flex",gap:16,marginTop:6,fontSize:11,flexWrap:"wrap" }}>
+                <span style={{ color:"#64748b" }}>{isLive?"Live":"Cached"}: <span style={{ color:isLive?"#22c55e":"#f59e0b" }}>{fmtRs(livePrice)}</span></span>
+                <span style={{ color:"#64748b" }}>Your entry: <span style={{ color:"#e2e8f0" }}>{fmtRs(parseFloat(entryPx))}</span></span>
+                <span style={{ color:"#64748b" }}>Diff: <span style={{ color:parseFloat(entryPx)>livePrice?"#ef4444":"#22c55e" }}>{fmtPct(((parseFloat(entryPx)-livePrice)/livePrice)*100)}</span></span>
               </div>
-            ))}
+            )}
           </div>
+        </>
+      )}
 
-          {group.stocks.length===0 ? (
-            <div style={{ textAlign:"center",padding:"40px 20px",color:"#475569" }}>
-              <div style={{ fontSize:30,marginBottom:10 }}>🔍</div>
-              <div style={{ marginBottom:14 }}>No stocks yet.</div>
-              <button style={BS.primary} onClick={onAddStock}>+ Add First Stock</button>
-            </div>
-          ) : (
-            <div style={{ overflowX:"auto",border:"1px solid #0a1e36",borderRadius:8 }}>
-              <table style={{ width:"100%",borderCollapse:"collapse",background:"#030d1c",fontSize:12,minWidth:700 }}>
-                <thead>
-                  <tr>
-                    {["Symbol","Entry","Current","Qty","SL","T1","T2","T3","Days","P&L ₹","P&L %","Status",""].map(h=>(
-                      <th key={h} style={{ padding:"8px 10px",fontSize:9,color:"#334155",letterSpacing:"0.1em",textTransform:"uppercase",textAlign:"left",borderBottom:"1px solid #0a1e36",background:"#020b18",whiteSpace:"nowrap" }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {group.stocks.map(stock=>{
-                    const info=calcStatus(stock,prices);
-                    const up=info.curr>=stock.entryPrice;
-                    return (
-                      <tr key={stock.id} className="strow" style={{ borderBottom:"1px solid #0a1e3650",opacity:stock.stopped?0.65:1 }}>
-                        <td style={{ padding:"8px 10px",whiteSpace:"nowrap" }}>
-                          <div style={{ fontWeight:700,color:"#e2e8f0" }}>{stock.symbol}</div>
-                          <div style={{ fontSize:9,color:"#475569" }}>{stock.sector}</div>
-                        </td>
-                        <td style={{ padding:"8px 10px",whiteSpace:"nowrap" }}>{fmtRs(stock.entryPrice)}</td>
-                        <td style={{ padding:"8px 10px",fontWeight:700,color:up?"#22c55e":"#ef4444",whiteSpace:"nowrap" }}>{fmtRs(info.curr)}</td>
-                        <td style={{ padding:"8px 10px",whiteSpace:"nowrap" }}>{stock.qty}</td>
-                        <td style={{ padding:"8px 10px",color:"#ef444499",whiteSpace:"nowrap" }}>{stock.stopLoss?fmtRs(stock.stopLoss):"—"}</td>
-                        <td style={{ padding:"8px 10px",color:"#22c55e99",whiteSpace:"nowrap" }}>{stock.t1?fmtRs(stock.t1):"—"}</td>
-                        <td style={{ padding:"8px 10px",color:"#3b82f699",whiteSpace:"nowrap" }}>{stock.t2?fmtRs(stock.t2):"—"}</td>
-                        <td style={{ padding:"8px 10px",color:"#a855f799",whiteSpace:"nowrap" }}>{stock.t3?fmtRs(stock.t3):"—"}</td>
-                        <td style={{ padding:"8px 10px",fontSize:10,color:"#475569",lineHeight:1.7 }}>
-                          {[stock.t1Days&&`T1:${stock.t1Days}d`,stock.t2Days&&`T2:${stock.t2Days}d`,stock.t3Days&&`T3:${stock.t3Days}d`].filter(Boolean).join(" ")||"—"}
-                        </td>
-                        <td style={{ padding:"8px 10px",fontWeight:800,color:info.pnl>=0?"#22c55e":"#ef4444",whiteSpace:"nowrap" }}>{fmtRs(info.pnl)}</td>
-                        <td style={{ padding:"8px 10px",color:info.pct>=0?"#22c55e":"#ef4444",whiteSpace:"nowrap" }}>{fmtPct(info.pct)}</td>
-                        <td style={{ padding:"8px 10px",whiteSpace:"nowrap" }}>
-                          <span style={{ padding:"2px 7px",borderRadius:4,fontSize:10,fontWeight:700,color:info.color,background:`${info.color}15`,border:`1px solid ${info.color}40` }}>{info.status}</span>
-                        </td>
-                        <td style={{ padding:"8px 6px",whiteSpace:"nowrap" }}>
-                          <button className="delBtn" style={{ background:"transparent",border:"none",color:"#334155",cursor:"pointer",fontSize:13,padding:"2px 6px",borderRadius:4,transition:"color 0.15s" }} onClick={()=>setConfirm({msg:`Remove ${stock.symbol}?`,action:()=>onDeleteStock(stock.id)})}>✕</button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+      {/* Target/SL grid */}
+      <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:10 }}>
+        <div><label style={BS.label}>🔴 Stop Loss (₹)</label><input style={{ ...BS.input,borderColor:"#ef444440" }} type="number" value={sl} onChange={e=>setSl(e.target.value)} placeholder={effEntry?(effEntry*0.95).toFixed(0):"e.g. 790"}/></div>
+        <div/>
+        <div><label style={BS.label}>🟢 Target T1 (₹)</label><input style={{ ...BS.input,borderColor:"#22c55e40" }} type="number" value={t1} onChange={e=>setT1(e.target.value)} placeholder={effEntry?(effEntry*1.05).toFixed(0):"e.g. 875"}/></div>
+        <div><label style={BS.label}>T1 Days</label><input style={BS.input} type="number" value={t1d} onChange={e=>setT1d(e.target.value)} placeholder="e.g. 7"/></div>
+        <div><label style={BS.label}>🔵 Target T2 (₹)</label><input style={{ ...BS.input,borderColor:"#3b82f640" }} type="number" value={t2} onChange={e=>setT2(e.target.value)} placeholder={effEntry?(effEntry*1.10).toFixed(0):"e.g. 915"}/></div>
+        <div><label style={BS.label}>T2 Days</label><input style={BS.input} type="number" value={t2d} onChange={e=>setT2d(e.target.value)} placeholder="e.g. 15"/></div>
+        <div><label style={BS.label}>🟣 Target T3 (₹)</label><input style={{ ...BS.input,borderColor:"#a855f740" }} type="number" value={t3} onChange={e=>setT3(e.target.value)} placeholder={effEntry?(effEntry*1.20).toFixed(0):"e.g. 998"}/></div>
+        <div><label style={BS.label}>T3 Days</label><input style={BS.input} type="number" value={t3d} onChange={e=>setT3d(e.target.value)} placeholder="e.g. 30"/></div>
+      </div>
+
+      {sel && !ok && (
+        <div style={{ fontSize:11,color:"#f59e0b",marginTop:8,padding:"8px 10px",background:"#1a1500",borderRadius:6,border:"1px solid #f59e0b30" }}>
+          {(!entryPx||parseFloat(entryPx)<=0) && "★ Enter your buy price. "}
+          {entryPx&&parseFloat(entryPx)>0&&!sl&&!t1&&!t2&&!t3 && "Enter at least a Stop Loss or one Target."}
         </div>
-      );
-    }
+      )}
 
-    // ── Add Group Modal ───────────────────────────────────────────────────────
-    function AddGroupModal({ onAdd, onClose }) {
-      const [name,setName]=useState(""), [budget,setBudget]=useState("50000");
-      return (
-        <Modal title="Create New Group" onClose={onClose}>
-          <div style={{ marginBottom:14 }}>
-            <label style={BS.label}>Group Name</label>
-            <input style={BS.input} value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. IT Momentum Play" autoFocus
-              onKeyDown={e=>e.key==="Enter"&&name.trim()&&onAdd({name:name.trim(),budget})} />
-          </div>
-          <div style={{ marginBottom:14 }}>
-            <label style={BS.label}>Budget per Stock (₹)</label>
-            <input style={BS.input} type="number" value={budget} onChange={e=>setBudget(e.target.value)} placeholder="50000" />
-          </div>
-          <div style={{ display:"flex",gap:10,justifyContent:"flex-end",marginTop:20 }}>
-            <button style={BS.cancel} onClick={onClose}>Cancel</button>
-            <button style={{ ...BS.primary,opacity:name.trim()?1:0.4 }} disabled={!name.trim()} onClick={()=>onAdd({name:name.trim(),budget})}>Create Group</button>
-          </div>
-        </Modal>
-      );
-    }
+      <div style={{ display:"flex",gap:10,justifyContent:"flex-end",marginTop:18 }}>
+        <button style={BS.cancel} onClick={onClose}>Cancel</button>
+        <button style={{ ...BS.primary,opacity:ok?1:0.4 }} disabled={!ok}
+          onClick={()=>onAdd({
+            symbol:sel.s, name:sel.n, sector:sel.sec,
+            entryPrice: parseFloat(entryPx),
+            stopLoss: sl?+sl:null, t1:t1?+t1:null, t2:t2?+t2:null, t3:t3?+t3:null,
+            t1Days:t1d?+t1d:null, t2Days:t2d?+t2d:null, t3Days:t3d?+t3d:null,
+          })}>
+          Add {sel?.s}
+        </button>
+      </div>
+    </Modal>
+  );
+}
 
-    // ── Add Stock Modal ───────────────────────────────────────────────────────
-    function AddStockModal({ group, prices, onAdd, onClose }) {
-      const [query,setQuery]=useState(""), [sel,setSel]=useState(null), [sugs,setSugs]=useState([]);
-      const [sl,setSl]=useState(""), [t1,setT1]=useState(""), [t1d,setT1d]=useState("");
-      const [t2,setT2]=useState(""), [t2d,setT2d]=useState(""), [t3,setT3]=useState(""), [t3d,setT3d]=useState("");
-
-      const onQuery = v => {
-        setQuery(v); setSel(null);
-        if(!v.trim()){setSugs([]);return;}
-        const q=v.toLowerCase();
-        setSugs(NSE_STOCKS.filter(s=>s.symbol.toLowerCase().includes(q)||s.name.toLowerCase().includes(q)).slice(0,8));
-      };
-      const pick = s => { setSel(s); setQuery(s.symbol); setSugs([]); };
-      const curr = sel?(prices[sel.symbol]??SEED[sel.symbol]??100):null;
-      const qty  = curr?Math.max(1,Math.floor(group.budget/curr)):0;
-      const ok   = sel&&(sl||t1||t2||t3);
-
-      return (
-        <Modal title={`Add Stock → ${group.name}`} onClose={onClose} wide>
-          <div style={{ marginBottom:12 }}>
-            <label style={BS.label}>Search NSE / BSE Stock</label>
-            <div style={{ position:"relative" }}>
-              <input style={BS.input} value={query} onChange={e=>onQuery(e.target.value)} placeholder="Type symbol or name… e.g. RELIANCE, Tata" autoFocus />
-              {sugs.length>0 && (
-                <div style={{ position:"absolute",top:"100%",left:0,right:0,background:"#030d1c",border:"1px solid #0a1e36",borderRadius:6,zIndex:200,maxHeight:240,overflowY:"auto",boxShadow:"0 8px 32px rgba(0,0,0,0.7)" }}>
-                  {sugs.map(s=>(
-                    <div key={s.symbol} className="sug" style={{ display:"flex",alignItems:"center",gap:8,padding:"9px 12px",borderBottom:"1px solid #0a1e3640",fontSize:12 }} onClick={()=>pick(s)}>
-                      <span style={{ fontWeight:700,color:"#38bdf8",minWidth:100 }}>{s.symbol}</span>
-                      <span style={{ color:"#94a3b8",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{s.name}</span>
-                      <span style={{ fontSize:9,color:"#475569",padding:"1px 5px",background:"#0f2a44",borderRadius:3,flexShrink:0 }}>{s.sector}</span>
-                      <span style={{ color:"#f59e0b",fontWeight:700,flexShrink:0 }}>{fmtRs(prices[s.symbol]??SEED[s.symbol]??0)}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {sel && (
-            <div style={{ background:"#020b18",border:"1px solid #0a1e36",borderRadius:8,padding:12,marginBottom:14,display:"flex",flexWrap:"wrap",gap:16 }}>
-              {[["Company",sel.name],["Sector",sel.sector],["Entry",fmtRs(curr),"#f59e0b"],[`Qty (₹${(group.budget/1000).toFixed(0)}K)`,`${qty} shares`,"#38bdf8"],["Investment",fmtRs(qty*curr)]].map(([l,v,c])=>(
-                <div key={l}>
-                  <div style={{ fontSize:9,color:"#475569",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:2 }}>{l}</div>
-                  <div style={{ fontWeight:700,color:c||"#e2e8f0",fontSize:13 }}>{v}</div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div style={{ display:"grid",gridTemplateColumns:"1fr 1fr",gap:10 }}>
-            <div><label style={BS.label}>🔴 Stop Loss (₹)</label><input style={{ ...BS.input,borderColor:"#ef444440" }} type="number" value={sl} onChange={e=>setSl(e.target.value)} placeholder={curr?(curr*0.95).toFixed(0):"Price"} /></div>
-            <div />
-            <div><label style={BS.label}>🟢 T1 (₹)</label><input style={{ ...BS.input,borderColor:"#22c55e40" }} type="number" value={t1} onChange={e=>setT1(e.target.value)} placeholder={curr?(curr*1.05).toFixed(0):"Price"} /></div>
-            <div><label style={BS.label}>T1 Days</label><input style={BS.input} type="number" value={t1d} onChange={e=>setT1d(e.target.value)} placeholder="7" /></div>
-            <div><label style={BS.label}>🔵 T2 (₹)</label><input style={{ ...BS.input,borderColor:"#3b82f640" }} type="number" value={t2} onChange={e=>setT2(e.target.value)} placeholder={curr?(curr*1.10).toFixed(0):"Price"} /></div>
-            <div><label style={BS.label}>T2 Days</label><input style={BS.input} type="number" value={t2d} onChange={e=>setT2d(e.target.value)} placeholder="15" /></div>
-            <div><label style={BS.label}>🟣 T3 (₹)</label><input style={{ ...BS.input,borderColor:"#a855f740" }} type="number" value={t3} onChange={e=>setT3(e.target.value)} placeholder={curr?(curr*1.20).toFixed(0):"Price"} /></div>
-            <div><label style={BS.label}>T3 Days</label><input style={BS.input} type="number" value={t3d} onChange={e=>setT3d(e.target.value)} placeholder="30" /></div>
-          </div>
-
-          {sel&&!ok && <div style={{ fontSize:11,color:"#f59e0b",marginTop:6 }}>Enter at least Stop Loss or one Target.</div>}
-          <div style={{ display:"flex",gap:10,justifyContent:"flex-end",marginTop:20 }}>
-            <button style={BS.cancel} onClick={onClose}>Cancel</button>
-            <button style={{ ...BS.primary,opacity:ok?1:0.4 }} disabled={!ok}
-              onClick={()=>onAdd({symbol:sel.symbol,name:sel.name,sector:sel.sector,yf:sel.yf,
-                stopLoss:sl?+sl:null,t1:t1?+t1:null,t2:t2?+t2:null,t3:t3?+t3:null,
-                t1Days:t1d?+t1d:null,t2Days:t2d?+t2d:null,t3Days:t3d?+t3d:null})}>
-              Add {sel?.symbol}
-            </button>
-          </div>
-        </Modal>
-      );
-    }
-
-    // ── Modal Wrapper ─────────────────────────────────────────────────────────
-    function Modal({ children, title, onClose, wide }) {
-      return (
-        <div style={{ position:"fixed",inset:0,background:"rgba(2,11,24,0.88)",zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",padding:16 }}
-          onClick={e=>e.target===e.currentTarget&&onClose()}>
-          <div style={{ background:"#030d1c",border:"1px solid #0a1e36",borderRadius:12,width:"100%",maxWidth:wide?700:440,maxHeight:"92vh",overflowY:"auto" }}>
-            <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 20px",borderBottom:"1px solid #0a1e36" }}>
-              <div style={{ fontWeight:700,color:"#e2e8f0",fontSize:15 }}>{title}</div>
-              <button onClick={onClose} style={{ background:"transparent",border:"none",color:"#475569",cursor:"pointer",fontSize:18 }}>✕</button>
-            </div>
-            <div style={{ padding:20 }}>{children}</div>
-          </div>
+// ── Shared atoms ──────────────────────────────────────────────────
+function Modal({ children, title, onClose, wide }) {
+  return (
+    <div style={{ position:"fixed",inset:0,background:"rgba(2,11,24,0.9)",zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",padding:16 }}
+      onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div style={{ background:"#030d1c",border:"1px solid #0a1e36",borderRadius:12,width:"100%",maxWidth:wide?700:440,maxHeight:"94vh",overflowY:"auto" }}>
+        <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",padding:"14px 18px",borderBottom:"1px solid #0a1e36" }}>
+          <div style={{ fontWeight:700,color:"#e2e8f0",fontSize:14 }}>{title}</div>
+          <button onClick={onClose} style={{ background:"transparent",border:"none",color:"#475569",cursor:"pointer",fontSize:18 }}>✕</button>
         </div>
-      );
-    }
+        <div style={{ padding:18 }}>{children}</div>
+      </div>
+    </div>
+  );
+}
+function Fld({ label, children }) {
+  return <div style={{ marginBottom:12 }}><label style={BS.label}>{label}</label>{children}</div>;
+}
 
-    // ── Base styles ───────────────────────────────────────────────────────────
-    const BS = {
-      primary: { background:"#0ea5e9",color:"#fff",border:"none",padding:"9px 18px",borderRadius:6,cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"inherit",letterSpacing:"0.04em" },
-      cancel:  { background:"transparent",color:"#64748b",border:"1px solid #1e3a5f",padding:"9px 18px",borderRadius:6,cursor:"pointer",fontSize:12,fontFamily:"inherit" },
-      danger:  { background:"transparent",color:"#ef4444",border:"1px solid #ef444440",padding:"9px 18px",borderRadius:6,cursor:"pointer",fontSize:12,fontFamily:"inherit" },
-      label:   { display:"block",fontSize:10,color:"#64748b",letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:6 },
-      input:   { width:"100%",background:"#020b18",border:"1px solid #0a1e36",color:"#e2e8f0",padding:"9px 11px",borderRadius:6,fontSize:13,fontFamily:"'Courier New',monospace",transition:"border-color 0.2s",boxSizing:"border-box" },
-    };
+const BS = {
+  primary: { background:"#0ea5e9",color:"#fff",border:"none",padding:"9px 18px",borderRadius:6,cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"inherit",letterSpacing:"0.04em" },
+  cancel:  { background:"transparent",color:"#64748b",border:"1px solid #1e3a5f",padding:"9px 18px",borderRadius:6,cursor:"pointer",fontSize:12,fontFamily:"inherit" },
+  danger:  { background:"transparent",color:"#ef4444",border:"1px solid #ef444440",padding:"9px 18px",borderRadius:6,cursor:"pointer",fontSize:12,fontFamily:"inherit" },
+  label:   { display:"block",fontSize:10,color:"#64748b",letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:6 },
+  input:   { width:"100%",background:"#020b18",border:"1px solid #0a1e36",color:"#e2e8f0",padding:"9px 11px",borderRadius:6,fontSize:13,fontFamily:"'Courier New',monospace",transition:"border-color 0.2s",boxSizing:"border-box" },
+};
 
-    // ── Mount ─────────────────────────────────────────────────────────────────
-    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-  </script>
-
-  <script>
-    // Register Service Worker for PWA offline support
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("sw.js")
-          .then(r => console.log("SW registered:", r.scope))
-          .catch(e => console.log("SW failed:", e));
-      });
-    }
-  </script>
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+<script>
+  if("serviceWorker"in navigator){
+    window.addEventListener("load",()=>{
+      navigator.serviceWorker.register("sw.js").catch(()=>{});
+    });
+  }
+</script>
 </body>
 </html>
